@@ -3,9 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "set NODE_OPTIONS=--experimental-vm-modules && jest --detectOpenHandles",
+    "test:watch": "npm run test -- --watch"
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "nodemon": "^3.1.9",
+    "bcryptjs": "^2.4.3",
+    "cors": "2.8.5",
+    "date-fns": "2.29.1",
+    "dotenv": "16.0.1",
+    "express": "4.18.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "2.3.3",
+    "zod": "3.22.2"
+  }
 }
