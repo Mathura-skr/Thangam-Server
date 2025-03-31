@@ -1,45 +1,49 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const dotenv = require('dotenv');
 
-import {
-   createAuthRouter,
-   createCategoryRouter,
-   createProductRouter,
-   createPurchaseRouter,
-   createUserRouter,
-} from './routes/index.js';
-import { CategoryModel } from './models/category.js';
-import { ProductModel } from './models/product.js';
-import { PurchaseModel } from './models/purchase.js';
-import { UserModel } from './models/user.js';
+// Import routes using CommonJS
+const userRoutes = require('./routes/userRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const brandRoutes = require('./routes/brandRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const otpRoutes = require('./routes/otpRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const productRoutes = require('./routes/productRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const favouriteRoutes = require('./routes/favouriteRoutes');
+const staffRoutes = require('./routes/staffRoutes');
+const createAuthRouter  = require('./routes/authRoutes');
+const User = require('./models/User');
 
 dotenv.config();
+
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Middleware
+app.use(helmet());             // Secure HTTP headers
+app.use(cors());               // Enable Cross-Origin Resource Sharing
+app.use(morgan('dev'));        // Log HTTP requests
+app.use(express.json());       // Parse incoming JSON payloads
 
-app.use('/api/users', createUserRouter(UserModel));
-app.use('/api/auth', createAuthRouter(UserModel));
-app.use('/api/products', createProductRouter(ProductModel));
-app.use('/api/purchases', createPurchaseRouter(PurchaseModel));
-app.use('/api/categories', createCategoryRouter(CategoryModel));
+// API routes
+app.use('/api/users', userRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/brands', brandRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/otp', otpRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/favourites', favouriteRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/auth', createAuthRouter(User));
 
-app.get('/', (req, res) => {
-   res.send('Api is ready');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-app.use((req, res) => {
-   res.status(404).json({
-      error: 'Route Not found',
-   });
-});
-
-const PORT = process.env.PORT || 3001;
-
-const server = app.listen(PORT, () => {
-   console.log(`Api running on http://localhost:${PORT}`);
-});
-
-export { app, server };

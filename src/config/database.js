@@ -1,16 +1,17 @@
-import { createPool } from 'mysql2/promise';
-import {
-   DB_HOST,
-   DB_NAME,
-   DB_PASSWORD,
-   DB_PORT,
-   DB_USER
-} from './config.js';
 
-export const pool = createPool({
-   host: DB_HOST,
-   port: DB_PORT,
-   user: DB_USER,
-   password: DB_PASSWORD,
-   database: DB_NAME
+const mysql = require('mysql2');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
+
+module.exports = pool.promise();
