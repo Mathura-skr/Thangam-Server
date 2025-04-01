@@ -24,8 +24,14 @@ dotenv.config();
 const app = express();
 
 // Middleware
+app.use(cors({ 
+  origin: '*',  // Allow all origins (use a specific origin in production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  credentials: true // Allow cookies if needed
+}));
+
 app.use(helmet());             // Secure HTTP headers
-app.use(cors());               // Enable Cross-Origin Resource Sharing
 app.use(morgan('dev'));        // Log HTTP requests
 app.use(express.json());       // Parse incoming JSON payloads
 
@@ -43,7 +49,7 @@ app.use('/api/favourites', favouriteRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/auth', createAuthRouter(User));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
