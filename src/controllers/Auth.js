@@ -1,75 +1,109 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { validateUser } = require('../schemas/user');
 
-dotenv.config();
+class Auth {
+   
+   
+   constructor(userModel) {
+      this.userModel = userModel;
+   }
 
-export class Auth {
-  constructor(userModel) {
-    this.userModel = userModel;
-  }
-
-  // Signup controller: creates a new user after hashing the password.
-  async signup(req, res) {
-    try {
-      const { name, email, password } = req.body;
-
-      // Check if the user already exists.
-      const existingUser = await this.userModel.findByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
-      }
-
-      // Hash the password before storing it.
-      const hashedPassword = await bcrypt.hash(password, 10);
-      // Create the new user. Adjust the create method to match your model.
-      const newUser = await this.userModel.create({
-        name,
-        email,
-        password: hashedPassword,
-      });
-
-      res.status(201).json({
-        message: 'User created successfully',
-        user: newUser,
-      });
-    } catch (error) {
-      console.error('Signup error:', error);
-      res.status(500).json({ message: 'Signup failed' });
-    }
-  }
-
-  // Signin controller: validates user credentials and returns a JWT token.
-  async signin(req, res) {
-    try {
+   signin = async (req, res) => {
       const { email, password } = req.body;
 
-      // Retrieve the user from the database.
-      const user = await this.userModel.findByEmail(email);
-      if (!user) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+      try {
+         // ✅ Fetch user by email
+         const existingUser = await this.userModel.getByEmail(email);
+
+         if (!existingUser) {
+            return res.status(404).json({ message: 'User does not exist' });
+         }
+
+         // ✅ Check password
+         const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+
+         if (!isPasswordCorrect) {
+            return res.status(401).json({ message: 'Invalid password' });
+         }
+
+         // ✅ Generate JWT token
+         const token = jwt.sign(
+            { email: existingUser.email, userId: existingUser.id, role: existingUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+         );
+
+         // ✅ Respond with user details (excluding password)
+         res.status(200).json({
+            result: {
+               userId: existingUser.id,
+               name: existingUser.name,
+               email: existingUser.email,
+               phone: existingUser.phone,
+               image: existingUser.image,
+               role: existingUser.role,
+               isAdmin: existingUser.isAdmin,
+            },
+            token,
+         });
+      } catch (error) {
+         console.error('❌ Signin Error:', error);
+         res.status(500).json({ message: 'Something went wrong' });
+      }
+   };
+
+   signup = async (req, res) => {
+      const validatedResult = validateUser(req.body);
+
+      if (!validatedResult.success) {
+         return res.status(400).json({
+            message: JSON.parse(validatedResult.error.message),
+         });
       }
 
-      // Compare the provided password with the stored hashed password.
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+      const { data } = validatedResult;
+
+      try {
+         const existingUser = await this.userModel.getByEmail(data.email);
+
+         if (existingUser) {
+            return res.status(409).json({
+               message: 'A user with that email already exists',
+            });
+         }
+
+         data.password = await bcrypt.hash(data.password, 12);
+
+         const newUser = await this.userModel.create({
+            name: data.name,
+            email: data.email,
+            password: data.password,
+            phone: data.phone,
+            image: data.image,
+            isAdmin: data.isAdmin ?? false,
+            role: data.role ?? 'user',
+         });
+
+         const token = jwt.sign(
+            { email: newUser.email, userId: newUser.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+         );
+
+         delete newUser.password;
+         console.log('User Created:', newUser);
+
+         res.status(201).json({
+            result: { ...newUser },
+            token,
+            message: 'User Created Successfully',
+         });
+      } catch (error) {
+         console.error('Signup Error:', error);
+         res.status(500).json({ message: 'Something went wrong' });
       }
-
-      // Create a JWT token using a secret key from your environment variables.
-      const token = jwt.sign(
-        { id: user.id, email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
-
-      res.json({
-        message: 'Signin successful',
-        token,
-      });
-    } catch (error) {
-      console.error('Signin error:', error);
-      res.status(500).json({ message: 'Signin failed' });
-    }
-  }
+   };
 }
+
+module.exports = Auth;

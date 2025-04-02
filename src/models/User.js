@@ -1,23 +1,47 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
+class UserModel {
+   static async getByEmail(email) {
+      const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
-const User = {
-    createTable: async () => {
-        const sql = `
-            CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                phone VARCHAR(15),
-                image VARCHAR(500),  -- New column for user image URL
-                isAdmin BOOLEAN DEFAULT FALSE,
-                role VARCHAR(50) DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `;
-        await db.execute(sql);
-    }
-};
+      if (users.length === 0) return null;
 
-module.exports =  User;
+      return users[0];
+   }
+
+   static async getById(userId) {
+      const [users] = await pool.query(
+         'SELECT id, name, email, phone, image, isAdmin, role, created_at FROM users WHERE id = ?',
+         [userId]
+      );
+
+      if (users.length === 0) return null;
+
+      return users[0];
+   }
+
+   static async create(user) {
+      const [result] = await pool.query(
+         'INSERT INTO users (name, email, password, phone, image, isAdmin, role) ' +
+         'VALUES (?, ?, ?, ?, ?, ?, ?)',
+         [
+            user.name,
+            user.email,
+            user.password,
+            user.phone,
+            user.image,
+            user.isAdmin,
+            user.role,
+         ]
+      );
+
+      const [users] = await pool.query(
+         'SELECT id, name, email, phone, image, isAdmin, role, created_at FROM users WHERE id = ?',
+         [result.insertId]
+      );
+
+      return users[0];
+   }
+}
+
+module.exports = UserModel;

@@ -9,13 +9,13 @@ const auth = (req, res, next) => {
    }
 
    try {
-      const decodedData = jwt.verify(token, process.env.EXPRESS_SECRET_KEY);
+      const decodedData = jwt.verify(token, process.env.JWT_SECRET);
 
       if (!decodedData.userId) {
          return res.status(401).json({ error: 'There is no id in decoded token' });
       }
 
-      req.userId = decodedData.userId; // Fix: should use `userId`
+      req.userId = decodedData.id; // Fix: should use `userId`
    } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
          return res.status(401).json({ message: error.message });

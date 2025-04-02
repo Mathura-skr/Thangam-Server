@@ -5,13 +5,10 @@ const createAuthRouter = (userModel) => {
   const router = express.Router();
   const authController = new Auth(userModel);
 
-  // Async handler wrapper (optional) for proper error handling
-  const asyncHandler = (fn) => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
 
-  router.post('/signin', asyncHandler(authController.signin));
-  router.post('/signup', asyncHandler(authController.signup));
+
+  router.post('/signin', authController.signin);
+  router.post('/signup', authController.signup);
 
   return router;
 };
