@@ -66,25 +66,17 @@ app.use((req, res) => {
 });
 
 
-// createTables().then(() => {
-//   const PORT = process.env.PORT || 5000;
-//   app.listen(PORT, () => {
-//       console.log(`🚀 Server running on port ${PORT}`);
-//   });
-// }).catch(error => {
-//   console.error("❌ Error initializing database:", error.message);
-// });
-
-pool.getConnection()
-    .then(() => {
-        console.log('✅ MySQL Connected Successfully!');
-    })
-    .catch(err => {
-        console.error('❌ MySQL Connection Error: ', err);
-    });
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+createTables().then(() => {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+  });
+}).catch(error => {
+  console.error("❌ Error initializing database:", error.message);
 });
+
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 

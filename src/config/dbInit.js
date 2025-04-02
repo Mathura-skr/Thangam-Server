@@ -1,7 +1,7 @@
 const pool = require('./database');
 
 const createTables = async () => {
-    const sql = `
+    const userTable = `
     CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -13,9 +13,9 @@ const createTables = async () => {
         isAdmin BOOLEAN DEFAULT FALSE,
         role ENUM('admin', 'user', 'staff') DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+    );`;
 
-     
+    const productTable = `
     CREATE TABLE IF NOT EXISTS products (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -23,13 +23,15 @@ const createTables = async () => {
         price DECIMAL(10,2) NOT NULL,
         stock INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    `;
+    );`;
 
     try {
-        const connection = await pool.getConnection();  // ✅ Get connection
-        await connection.query(sql);  // ✅ Execute query
-        connection.release();  // ✅ Release connection
+        const connection = await pool.getConnection();  
+        
+        await connection.query(userTable);  
+        await connection.query(productTable);  
+        
+        connection.release();  
         console.log("✅ Tables created or already exist");
     } catch (error) {
         console.error("❌ MySQL Table Creation Error:", error.message);
