@@ -1,41 +1,53 @@
-const db = require('../config/database');
+const Favourites = require('../models/Favourite');
 
-
-// Add a product to favourites
-exports.addFavourite = async (req, res) => {
-  const { user_id, product_id } = req.body;
-  try {
-    const [result] = await db.execute(
-      'INSERT INTO favourites (user_id, product_id) VALUES (?, ?)',
-      [user_id, product_id]
-    );
-    res.status(201).json({ message: 'Favourite added', favouriteId: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to add favourite' });
-  }
+exports.create = async (req, res) => {
+    try {
+        const created = await Favourites.create(req.body);
+        res.status(201).json(created);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Error adding product to favourites, please try again later' });
+    }
 };
 
-// Get all favourites for a user
-exports.getFavouritesByUser = async (req, res) => {
-  const userId = req.params.userId;
-  try {
-    const [rows] = await db.execute('SELECT * FROM favourites WHERE user_id = ?', [userId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve favourites' });
-  }
+exports.getByUserId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { page = 1, limit = 10 } = req.query;
+
+        const result = await Favourites.getByUserId(id, page, limit);
+        res.header('X-Total-Count', result.total);
+        res.status(200).json(result.favourites);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Error fetching your favourites, please try again later' });
+    }
 };
 
-// Remove a product from favourites
-exports.deleteFavourite = async (req, res) => {
-  const favouriteId = req.params.id;
-  try {
-    await db.execute('DELETE FROM favourites WHERE id = ?', [favouriteId]);
-    res.json({ message: 'Favourite removed' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to remove favourite' });
-  }
+exports.updateById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updated = await Favourites.updateById(id, req.body);
+        if (!updated) {
+            return res.status(404).json({ message: 'Favourite not found' });
+        }
+        res.status(200).json(updated);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Error updating your favourite, please try again later' });
+    }
+};
+
+exports.deleteById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Favourites.deleteById(id);
+        if (!deleted) {
+            return res.status(404).json({ message: 'Favourite not found' });
+        }
+        res.status(200).json(deleted);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Error deleting that product from favourites, please try again later' });
+    }
 };

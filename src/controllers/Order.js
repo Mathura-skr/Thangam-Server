@@ -1,68 +1,86 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
-// Create a new order
-exports.createOrder = async (req, res) => {
-  const { user_id, total_price, status } = req.body;
-  try {
-    const [result] = await db.execute(
-      'INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, ?)',
-      [user_id, total_price, status || 'pending']
-    );
-    res.status(201).json({ message: 'Order created', orderId: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create order' });
-  }
-};
+exports.create = async (req, res) => {
+    try {
+        const { user_id, product_id, address_id, quantity, total_price, status, paymentMode } = req.body;
 
-// Get order by ID
-exports.getOrderById = async (req, res) => {
-  const orderId = req.params.id;
-  try {
-    const [rows] = await db.execute('SELECT * FROM orders WHERE id = ?', [orderId]);
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Order not found' });
+        const [result] = await pool.query(
+            'INSERT INTO orders (user_id, product_id, address_id, quantity, total_price, status, paymentMode) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [user_id, product_id, address_id, quantity, total_price, status, paymentMode]
+        );
+
+        const newOrder = {
+            id: result.insertId,
+            user_id,
+            product_id,
+            address_id,
+            quantity,
+            total_price,
+            status,
+            paymentMode
+        };
+
+        res.status(201).json(newOrder);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error creating order, please try again later' });
     }
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve order' });
-  }
 };
 
-// Get all orders for a specific user
-exports.getOrdersByUser = async (req, res) => {
-  const userId = req.params.userId;
-  try {
-    const [rows] = await db.execute('SELECT * FROM orders WHERE user_id = ?', [userId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve orders' });
-  }
+
+exports.updateById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedFields = req.body;
+
+        const fields = Object.keys(updatedFields);
+        const values = Object.values(updatedFields);
+        const setClause = fields.map(field => `\`${field}\` = ?`).join(', ');
+
+        const [result] = await pool.query(
+            `UPDATE orders SET ${setClause} WHERE id = ?`,
+            [...values, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        const [updatedOrder] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
+        res.status(200).json(updatedOrder[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating order, please try again later' });
+    }
 };
 
-// Update order status
-exports.updateOrderStatus = async (req, res) => {
-  const orderId = req.params.id;
-  const { status } = req.body;
-  try {
-    await db.execute('UPDATE orders SET status = ? WHERE id = ?', [status, orderId]);
-    res.json({ message: 'Order status updated' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update order status' });
-  }
+exports.getByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const [orders] = await pool.query('SELECT * FROM orders WHERE user_id = ?', [userId]);
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting orders, please try again later' });
+    }
 };
 
-// Delete an order
-exports.deleteOrder = async (req, res) => {
-  const orderId = req.params.id;
-  try {
-    await db.execute('DELETE FROM orders WHERE id = ?', [orderId]);
-    res.json({ message: 'Order deleted' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete order' });
-  }
+exports.getAll = async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        const offset = (page - 1) * limit;
+
+        const [orders] = await pool.query('SELECT * FROM orders LIMIT ? OFFSET ?', [parseInt(limit), offset]);
+
+        const [total] = await pool.query('SELECT COUNT(*) AS total FROM orders');
+
+        res.status(200).json({
+            total: total[0].total,
+            orders
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting orders, please try again later' });
+    }
 };

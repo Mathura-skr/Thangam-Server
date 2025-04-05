@@ -1,16 +1,10 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
-const Brand = {
-    createTable: async () => {
-        const sql = `
-            CREATE TABLE IF NOT EXISTS brands (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `;
-        await db.execute(sql);
+class BrandModel {
+    static async getAll() {
+        const [brands] = await pool.query('SELECT * FROM brands');
+        return brands;
     }
-};
+}
 
-module.exports =  Brand;
+module.exports = BrandModel;

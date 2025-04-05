@@ -1,49 +1,49 @@
-const db = require('../config/database');
+const BrandModel = require('../models/Brand');
 
-// Create a new brand
-exports.createBrand = async (req, res) => {
-  const { name } = req.body;
-  try {
-    const [result] = await db.execute('INSERT INTO brands (name) VALUES (?)', [name]);
-    res.status(201).json({ message: 'Brand created', brandId: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create brand' });
-  }
-};
+class BrandController {
+    static async getAll(req, res) {
+        try {
+            const brands = await BrandModel.getAll();
+            res.status(200).json(brands);
+        } catch (error) {
+            console.error('Error fetching brands:', error);
+            res.status(500).json({ message: 'Error fetching brands' });
+        }
+    }
 
-// Get all brands
-exports.getAllBrands = async (req, res) => {
-  try {
-    const [rows] = await db.execute('SELECT * FROM brands');
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve brands' });
-  }
-};
+    static async create(req, res) {
+        try {
+            const { name, description } = req.body;
+            const brand = await BrandModel.create({ name, description });
+            res.status(201).json(brand);
+        } catch (error) {
+            console.error('Error creating brand:', error);
+            res.status(500).json({ message: 'Error creating brand' });
+        }
+    }
 
-// Update a brand
-exports.updateBrand = async (req, res) => {
-  const brandId = req.params.id;
-  const { name } = req.body;
-  try {
-    await db.execute('UPDATE brands SET name = ? WHERE id = ?', [name, brandId]);
-    res.json({ message: 'Brand updated' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update brand' });
-  }
-};
+    static async updateById(req, res) {
+        try {
+            const { id } = req.params;
+            const { name, description } = req.body;
+            const brand = await BrandModel.updateById(id, { name, description });
+            res.status(200).json(brand);
+        } catch (error) {
+            console.error('Error updating brand:', error);
+            res.status(500).json({ message: 'Error updating brand' });
+        }
+    }
 
-// Delete a brand
-exports.deleteBrand = async (req, res) => {
-  const brandId = req.params.id;
-  try {
-    await db.execute('DELETE FROM brands WHERE id = ?', [brandId]);
-    res.json({ message: 'Brand deleted' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete brand' });
-  }
-};
+    static async deleteById(req, res) {
+        try {
+            const { id } = req.params;
+            const result = await BrandModel.deleteById(id);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error deleting brand:', error);
+            res.status(500).json({ message: 'Error deleting brand' });
+        }
+    }
+}
+
+module.exports = BrandController;

@@ -1,50 +1,67 @@
-const db = require('../config/database');
 
+const CategoryModel = require('../models/Category');
 
-// Create a new category
-exports.createCategory = async (req, res) => {
-  const { name } = req.body;
-  try {
-    const [result] = await db.execute('INSERT INTO categories (name) VALUES (?)', [name]);
-    res.status(201).json({ message: 'Category created', categoryId: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create category' });
-  }
+const Category = {
+    getAll: async (req, res) => {
+        try {
+            const categories = await CategoryModel.getAll();
+            res.status(200).json(categories);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            res.status(500).json({ message: 'Error fetching categories' });
+        }
+    }
 };
 
-// Get all categories
-exports.getAllCategories = async (req, res) => {
-  try {
-    const [rows] = await db.execute('SELECT * FROM categories');
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve categories' });
-  }
-};
+module.exports = Category;
 
-// Update a category
-exports.updateCategory = async (req, res) => {
-  const categoryId = req.params.id;
-  const { name } = req.body;
-  try {
-    await db.execute('UPDATE categories SET name = ? WHERE id = ?', [name, categoryId]);
-    res.json({ message: 'Category updated' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update category' });
-  }
-};
 
-// Delete a category
-exports.deleteCategory = async (req, res) => {
-  const categoryId = req.params.id;
-  try {
-    await db.execute('DELETE FROM categories WHERE id = ?', [categoryId]);
-    res.json({ message: 'Category deleted' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete category' });
-  }
-};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const express = require('express');
+// const router = express.Router();
+// const Category = require('../models/Category');
+// const Subcategory = require('../models/Subcategory');
+// const authMiddleware = require('../middlewares/authMiddleware');
+
+// router.post('/', authMiddleware, async (req, res) => {
+//     try {
+//         const category = await Category.create(req.body);
+//         res.status(201).json(category);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error creating category' });
+//     }
+// });
+
+// router.get('/', async (req, res) => {
+//     try {
+//         const categories = await Category.getAll();
+//         res.status(200).json(categories);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error fetching categories' });
+//     }
+// });
+
+// router.delete('/:id', authMiddleware, async (req, res) => {
+//     try {
+//         const result = await Category.deleteById(req.params.id);
+//         res.status(200).json(result);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error deleting category' });
+//     }
+// });
+
+// module.exports = router;

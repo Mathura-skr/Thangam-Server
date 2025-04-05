@@ -19,9 +19,15 @@ const orderRoutes = require('./routes/orderRoutes');
 const productRoutes = require('./routes/productRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const favouriteRoutes = require('./routes/favouriteRoutes');
-const staffRoutes = require('./routes/staffRoutes');
-const authRoutes  = require('./routes/authRoutes');
-// const User = require('./models/User');
+// const staffRoutes = require('./routes/staffRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
+
+
+
+const createAuthRouter  = require('./routes/authRoutes');
+const User = require('./models/User'); // Import User Model
+const authRoutes = createAuthRouter(User); // Pass User Model
+
 
 dotenv.config();
 
@@ -41,7 +47,7 @@ app.use(express.json());       // Parse incoming JSON payloads
 app.use(cookieParser())
 
 // API routes
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/brands', brandRoutes);
@@ -52,7 +58,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favourites', favouriteRoutes);
-app.use('/api/staff', staffRoutes);
+// app.use('/api/staff', staffRoutes);
+app.use('/suppliers', supplierRoutes);
+
 
 app.get("/", (req, res) => {
   // res.status(200).json({ message: "run" });
@@ -75,8 +83,4 @@ createTables().then(() => {
   console.error("❌ Error initializing database:", error.message);
 });
 
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
 

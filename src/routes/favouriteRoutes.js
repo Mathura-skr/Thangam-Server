@@ -3,8 +3,9 @@ const router = express.Router();
 const favouriteController = require('../controllers/Favourite');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-router.post('/', authMiddleware, favouriteController.addFavourite);
-router.get('/user/:userId', authMiddleware, favouriteController.getFavouritesByUser);
-router.delete('/:id', authMiddleware, favouriteController.deleteFavourite);
+router.post('/', authMiddleware, favouriteController.create);
+router.get('/user/:userId', authMiddleware, favouriteController.getByUserId);
+router.delete('/:id', authMiddleware, favouriteController.deleteById);
 
 module.exports =  router;
+

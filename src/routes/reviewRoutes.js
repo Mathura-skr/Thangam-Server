@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const reviewController = require('../controllers/Review');
-const authMiddleware = require('../middlewares/authMiddleware');
+const ReviewController = require('../controllers/Review');
 
-router.post('/', authMiddleware, reviewController.createReview);
-router.get('/product/:productId', reviewController.getReviewsByProduct);
-router.put('/:id', authMiddleware, reviewController.updateReview);
-router.delete('/:id', authMiddleware, reviewController.deleteReview);
 
-module.exports =  router;
+router.post('/', ReviewController.create);
+router.get('/product/:id', ReviewController.getByProductId);
+router.put('/:id', ReviewController.updateById);
+router.delete('/:id', ReviewController.deleteById);
+
+module.exports = router;

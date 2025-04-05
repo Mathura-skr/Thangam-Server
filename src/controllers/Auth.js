@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 const { validateUser } = require('../schemas/user');
 
 class Auth {
-   
-   
+
+
    constructor(userModel) {
       this.userModel = userModel;
    }
@@ -58,9 +58,10 @@ class Auth {
 
       if (!validatedResult.success) {
          return res.status(400).json({
-            message: JSON.parse(validatedResult.error.message),
+            message: validatedResult.error?.errors || "Validation failed",
          });
       }
+
 
       const { data } = validatedResult;
 

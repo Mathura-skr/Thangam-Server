@@ -1,56 +1,82 @@
-const db = require('../config/database');
+const AddressModel = require('../models/Address');
 
-// Create a new address
-exports.createAddress = async (req, res) => {
-  const { user_id, street, city, state, zip_code, country } = req.body;
-  try {
-    const [result] = await db.execute(
-      'INSERT INTO addresses (user_id, street, city, state, zip_code, country) VALUES (?, ?, ?, ?, ?, ?)',
-      [user_id, street, city, state, zip_code, country]
-    );
-    res.status(201).json({ message: 'Address created', addressId: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create address' });
-  }
-};
+class AddressController {
+    static async create(req, res) {
+        try {
+            const { user_id, street, city, district, province, zip_code } = req.body;
 
-// Get addresses for a given user
-exports.getAddressesByUser = async (req, res) => {
-  const userId = req.params.userId;
-  try {
-    const [rows] = await db.execute('SELECT * FROM addresses WHERE user_id = ?', [userId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve addresses' });
-  }
-};
+            if (!user_id || !street || !city || !district || !province || !zip_code) {
+                return res.status(400).json({ message: 'All fields are required' });
+            }
 
-// Update an address
-exports.updateAddress = async (req, res) => {
-  const addressId = req.params.id;
-  const { street, city, state, zip_code, country } = req.body;
-  try {
-    await db.execute(
-      'UPDATE addresses SET street = ?, city = ?, state = ?, zip_code = ?, country = ? WHERE id = ?',
-      [street, city, state, zip_code, country, addressId]
-    );
-    res.json({ message: 'Address updated' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update address' });
-  }
-};
+            const newAddress = await AddressModel.create({
+                user_id,
+                street,
+                city,
+                district,
+                province,
+                zip_code
+            });
 
-// Delete an address
-exports.deleteAddress = async (req, res) => {
-  const addressId = req.params.id;
-  try {
-    await db.execute('DELETE FROM addresses WHERE id = ?', [addressId]);
-    res.json({ message: 'Address deleted' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete address' });
-  }
-};
+            res.status(201).json(newAddress);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    // Get all addresses by user ID
+    static async getByUserId(req, res) {
+        try {
+            const userId = req.params.userId;
+            const addresses = await AddressModel.getByUserId(userId);
+
+            if (addresses.length === 0) {
+                return res.status(404).json({ message: 'No addresses found for this user' });
+            }
+
+            res.status(200).json(addresses);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    // Update an address by ID
+    static async updateById(req, res) {
+        try {
+            const { id } = req.params;
+            const updatedFields = req.body;
+
+            const updatedAddress = await AddressModel.updateById(id, updatedFields);
+
+            if (!updatedAddress) {
+                return res.status(404).json({ message: 'Address not found' });
+            }
+
+            res.status(200).json(updatedAddress);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    // Delete an address by ID
+    static async deleteById(req, res) {
+        try {
+            const { id } = req.params;
+            const success = await AddressModel.deleteById(id);
+
+            if (!success) {
+                return res.status(404).json({ message: 'Address not found' });
+            }
+
+            res.status(200).json({ message: 'Address deleted successfully' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+}
+
+module.exports = AddressController;
