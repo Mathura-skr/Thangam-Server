@@ -9,7 +9,6 @@ const createTables = async () => {
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20),
         image VARCHAR(255),
-        isVerified BOOLEAN DEFAULT FALSE,
         isAdmin BOOLEAN DEFAULT FALSE,
         role ENUM('admin', 'user', 'staff') DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -55,46 +55,47 @@ class Auth {
 
    signup = async (req, res) => {
       const validatedResult = validateUser(req.body);
-
+   
       if (!validatedResult.success) {
          return res.status(400).json({
             message: validatedResult.error?.errors || "Validation failed",
          });
       }
-
-
+   
       const { data } = validatedResult;
-
+   
       try {
          const existingUser = await this.userModel.getByEmail(data.email);
-
+   
          if (existingUser) {
             return res.status(409).json({
                message: 'A user with that email already exists',
             });
          }
-
+   
          data.password = await bcrypt.hash(data.password, 12);
-
+   
+         const allowedRoles = ['user', 'admin', 'staff'];
+         const finalRole = allowedRoles.includes(data.role) ? data.role : 'user';
+   
          const newUser = await this.userModel.create({
             name: data.name,
             email: data.email,
             password: data.password,
             phone: data.phone,
-            image: data.image,
             isAdmin: data.isAdmin ?? false,
-            role: data.role ?? 'user',
+            role: finalRole,
          });
-
+   
          const token = jwt.sign(
             { email: newUser.email, userId: newUser.id },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
          );
-
+   
          delete newUser.password;
          console.log('User Created:', newUser);
-
+   
          res.status(201).json({
             result: { ...newUser },
             token,
@@ -105,6 +106,7 @@ class Auth {
          res.status(500).json({ message: 'Something went wrong' });
       }
    };
+   
 }
 
 module.exports = Auth;

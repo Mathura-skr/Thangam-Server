@@ -14,10 +14,14 @@ exports.getAllUsers = async (req, res) => {
 // Create a new user
 exports.createUser = async (req, res) => {
     const { name, email, password, phone, image, isAdmin, role } = req.body;
+
+    const allowedRoles = ['user', 'admin', 'staff'];
+    const finalRole = allowedRoles.includes(role) ? role : 'user';
+
     try {
         const [result] = await pool.query(
             `INSERT INTO users (name, email, password, phone, image, isAdmin, role) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [name, email, password, phone, image || null, isAdmin || false, role || 'user']
+            [name, email, password, phone, image || null, isAdmin || false, finalRole]
         );
         res.status(201).json({ message: 'User created', userId: result.insertId });
     } catch (err) {
