@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 const cookieParser=require("cookie-parser")
 const createTables = require('./config/dbInit'); 
 const pool = require('./config/database')
-
+const path = require("path");
 
 
 const userRoutes = require('./routes/userRoutes');
@@ -25,8 +25,8 @@ const supplierRoutes = require('./routes/supplierRoutes');
 
 
 const createAuthRouter  = require('./routes/authRoutes');
-const User = require('./models/User'); // Import User Model
-const authRoutes = createAuthRouter(User); // Pass User Model
+const User = require('./models/User'); 
+const authRoutes = createAuthRouter(User); 
 
 
 dotenv.config();
@@ -35,9 +35,9 @@ const app = express();
 
 // Middleware
 app.use(cors({ 
-  origin: 'http://localhost:3000',  // Allow all origins (use a specific origin in production)
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  origin: 'http://localhost:3000',  
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type', 'Authorization'], 
   credentials: true // Allow cookies if needed
 }));
 
@@ -60,6 +60,14 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/favourites', favouriteRoutes);
 // app.use('/api/staff', staffRoutes);
 app.use('/suppliers', supplierRoutes);
+
+
+// Serve static files from /uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Use the upload route
+const uploadRoute = require("./routes/uploadRoutes");
+app.use("/api/upload", uploadRoute);
 
 
 app.get("/", (req, res) => {
