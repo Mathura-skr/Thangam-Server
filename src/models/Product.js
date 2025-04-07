@@ -89,7 +89,7 @@ class Product {
       quantity,
       price,
       stock,
-      image_url ? JSON.stringify(image_url) : null
+      image_url || null
     ]);
 
     return { id: result.insertId, ...productData };
@@ -181,10 +181,10 @@ class Product {
       subcategory_id,
       supplier_id,
       brand_id,
-      quantity,
+      quantity !== undefined ? quantity : null,
       price,
       stock,
-      image_url ?? null,
+      image_url || null,
       id
     ]);
 
@@ -196,6 +196,39 @@ class Product {
     await pool.execute(query, [id]);
     return { message: "Product deleted successfully" };
   }
+
+  static async getById(id) {
+    const query = `
+      SELECT 
+        p.id, p.name, p.description, p.quantity, p.price, p.stock, p.image_url,
+        c.name AS category_name,
+        sc.name AS subcategory_name,
+        s.name AS supplier_name,
+        b.name AS brand_name
+      FROM products p
+      JOIN categories c ON p.category_id = c.id
+      JOIN subcategories sc ON p.subcategory_id = sc.id
+      JOIN suppliers s ON p.supplier_id = s.id
+      JOIN brands b ON p.brand_id = b.id
+      WHERE p.id = ?
+    `;
+    const [rows] = await pool.execute(query, [id]);
+    return rows[0]; 
+  
+  }
+
+  static async getAll() {
+    const [rows] = await pool.execute(`
+      SELECT p.*, c.name as category, s.name as subCategory, b.name as brand 
+      FROM products p
+      JOIN categories c ON p.category_id = c.id
+      JOIN subcategories s ON p.subcategory_id = s.id
+      JOIN brands b ON p.brand_id = b.id
+    `);
+    return rows;
+  }
+  
+  
 }
 
 module.exports = Product;

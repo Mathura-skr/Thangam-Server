@@ -10,8 +10,14 @@ router.post("/", upload.single("image"), (req, res) => {
   }
 
   // Return image URL
-  const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  const imageUrl = `${req.protocol}://${req.get("host")}/src/uploads/${req.file.filename}`;
   res.status(200).json({ url: imageUrl });
+
+  console.log("Uploaded file:", req.file);
+
+  
 });
 
 module.exports = router;
+
+

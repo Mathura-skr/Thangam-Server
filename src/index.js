@@ -22,11 +22,9 @@ const favouriteRoutes = require('./routes/favouriteRoutes');
 // const staffRoutes = require('./routes/staffRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 
-
-
 const createAuthRouter  = require('./routes/authRoutes');
-const User = require('./models/User'); 
-const authRoutes = createAuthRouter(User); 
+const User = require('./models/User'); // Import User Model
+const authRoutes = createAuthRouter(User); // Pass User Model
 
 
 dotenv.config();
@@ -35,16 +33,21 @@ const app = express();
 
 // Middleware
 app.use(cors({ 
-  origin: 'http://localhost:3000',  
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type', 'Authorization'], 
+  origin: 'http://localhost:3000',  // Allow all origins (use a specific origin in production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   credentials: true // Allow cookies if needed
 }));
 
-app.use(helmet());             // Secure HTTP headers
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));          // Secure HTTP headers
 app.use(morgan('dev'));        // Log HTTP requests
 app.use(express.json());       // Parse incoming JSON payloads
-app.use(cookieParser())
+app.use(cookieParser());
+
+
+// Serve static files from /uploads
+app.use("/src/uploads", express.static(path.normalize(path.join(__dirname, "uploads"))));
+
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -61,9 +64,6 @@ app.use('/api/favourites', favouriteRoutes);
 // app.use('/api/staff', staffRoutes);
 app.use('/suppliers', supplierRoutes);
 
-
-// Serve static files from /uploads
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Use the upload route
 const uploadRoute = require("./routes/uploadRoutes");
@@ -83,7 +83,7 @@ app.use((req, res) => {
 
 
 createTables().then(() => {
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 5001;
   app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
   });
