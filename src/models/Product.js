@@ -9,7 +9,7 @@ class Product {
       subcategory_name,
       supplier_name,
       brand_name,
-      quantity,
+      quantity ,
       price,
       stock,
       image_url
@@ -86,7 +86,7 @@ class Product {
       subcategory_id,
       supplier_id,
       brand_id,
-      quantity,
+      quantity !== undefined ? quantity : 0,
       price,
       stock,
       image_url || null
@@ -213,7 +213,7 @@ class Product {
       WHERE p.id = ?
     `;
     const [rows] = await pool.execute(query, [id]);
-    return rows[0]; 
+    return rows[0]; // return a single product
   
   }
 
@@ -227,6 +227,25 @@ class Product {
     `);
     return rows;
   }
+
+  static async getFilterOptions() {
+    const [categories] = await pool.execute(`SELECT name FROM categories`);
+    const [subcategories] = await pool.execute(`SELECT name FROM subcategories`);
+    const [brands] = await pool.execute(`SELECT name FROM brands`);
+    const [quantities] = await pool.execute(`
+      SELECT DISTINCT quantity FROM products WHERE quantity IS NOT NULL
+    `);
+  
+    return {
+      categories: categories.map(c => c.name),
+      subcategories: subcategories.map(sc => sc.name),
+      brands: brands.map(b => b.name),
+      quantities: quantities.map(q => q.quantity)
+    };
+  }
+  
+  
+  
   
   
 }

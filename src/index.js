@@ -21,6 +21,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const favouriteRoutes = require('./routes/favouriteRoutes');
 // const staffRoutes = require('./routes/staffRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
+const filterRoutes = require('./routes/filterRoutes');
 
 const createAuthRouter  = require('./routes/authRoutes');
 const User = require('./models/User'); // Import User Model
@@ -62,7 +63,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favourites', favouriteRoutes);
 // app.use('/api/staff', staffRoutes);
-app.use('/suppliers', supplierRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/filters', filterRoutes);
 
 
 // Use the upload route

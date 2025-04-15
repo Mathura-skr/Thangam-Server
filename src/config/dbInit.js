@@ -72,7 +72,7 @@ const createTables = async () => {
         subcategory_id INT NOT NULL,
         supplier_id INT NOT NULL,
         brand_id INT NOT NULL,
-        quantity INT NULL,
+        quantity INT DEFAULT NULL,
         price DECIMAL(10, 2) NOT NULL,
         stock INT NOT NULL,
         image_url TEXT,
