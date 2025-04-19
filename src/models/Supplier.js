@@ -4,30 +4,27 @@ class Supplier {
     // Create a new supplier
     static async create(supplier) {
         const [result] = await pool.query(
-            `INSERT INTO suppliers (name, phone, address, category_id, product_id, product_name, quantity, stock) 
+            `INSERT INTO suppliers (name, phone, address, category, product_name, brand, quantity, stock) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 supplier.name,
                 supplier.phone,
                 supplier.address,
-                supplier.category_id,
-                supplier.product_id,
+                supplier.category,
                 supplier.product_name,
+                supplier.brand,
                 supplier.quantity,
                 supplier.stock
             ]
         );
-
         return { id: result.insertId, ...supplier };
     }
 
     // Get all suppliers
     static async getAll() {
         const [suppliers] = await pool.query(`
-            SELECT s.*, c.name AS category_name, p.name AS product_name
-            FROM suppliers s
-            JOIN categories c ON s.category_id = c.id
-            JOIN products p ON s.product_id = p.id
+            SELECT * FROM suppliers
+            ORDER BY created_at DESC
         `);
         return suppliers;
     }

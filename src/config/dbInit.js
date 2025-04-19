@@ -8,7 +8,7 @@ const createTables = async () => {
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20),
-        image VARCHAR(255),
+        image_url VARCHAR(255),
         isAdmin BOOLEAN DEFAULT FALSE,
         role ENUM('admin', 'user', 'staff') DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -54,14 +54,17 @@ const createTables = async () => {
 
   const supplierTable = `
     CREATE TABLE IF NOT EXISTS suppliers (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        phone VARCHAR(20) NOT NULL,
-        address VARCHAR(255) NOT NULL,
-        category_id INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
-    );`;
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    category VARCHAR(255) NOT NULL,       
+    product_name VARCHAR(255) NOT NULL,
+    brand VARCHAR(255) NOT NULL,
+    quantity INT DEFAULT 0,
+    stock INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`;
 
   const productTable = `
     CREATE TABLE IF NOT EXISTS products (
@@ -159,6 +162,33 @@ const createTables = async () => {
     console.log("✅ All tables created or already exist");
   } catch (error) {
     console.error("❌ MySQL Table Creation Error:", error.message);
+  }
+  //TODO: env
+  const adminEmail = "admin@thangam.com";
+  const adminPassword = "admin123";
+  const isAdmin = 1;
+  const bcrypt = require("bcrypt");
+
+  try {
+    const [existingAdmin] = await pool.query(
+      "SELECT * FROM users WHERE email = ? AND role = 'admin'",
+      [adminEmail]
+    );
+
+    if (existingAdmin.length === 0) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+      await pool.query(
+        "INSERT INTO users (name, email, password, role, isAdmin) VALUES (?, ?, ?, ?, ?)",
+        ["Admin", adminEmail, hashedPassword, "admin", isAdmin]
+      );
+
+      console.log("✅ Initial admin created:", adminEmail);
+    } else {
+      console.log("ℹ️ Admin already exists:", adminEmail);
+    }
+  } catch (err) {
+    console.error("❌ Failed to create initial admin:", err.message);
   }
 };
 

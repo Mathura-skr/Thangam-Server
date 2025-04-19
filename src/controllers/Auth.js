@@ -41,7 +41,7 @@ class Auth {
                name: existingUser.name,
                email: existingUser.email,
                phone: existingUser.phone,
-               image: existingUser.image,
+               image_url: existingUser.image_url,
                role: existingUser.role,
                isAdmin: existingUser.isAdmin,
             },

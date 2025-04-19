@@ -1,11 +1,10 @@
-const Category = require('../models/Category');
+const { pool } = require('../config/database');
 
-exports.getAll = async (req, res) => {
-    try {
-        const result = await Category.getAll();
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('Error fetching categories:', error);
-        res.status(500).json({ message: 'Error fetching categories' });
+class CategoryModel {
+    static async getAll() {
+        const [categories] = await pool.query('SELECT * FROM categories');
+        return categories;
     }
-};
+}
+
+module.exports = CategoryModel;

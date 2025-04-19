@@ -1,12 +1,12 @@
 // const db = require('../config/database');
 
-// // Create a new staff member with image
+// // Create a new staff member with image_url
 // exports.createStaff = async (req, res) => {
-//   const { name, role, email, phone, image, isAdmin } = req.body;
+//   const { name, role, email, phone, image_url, isAdmin } = req.body;
 //   try {
 //     const [result] = await db.execute(
-//       `INSERT INTO staff (name, role, email, phone, image, isAdmin) VALUES (?, ?, ?, ?, ?, ?)`,
-//       [name, role, email, phone, image || null, isAdmin || false]
+//       `INSERT INTO staff (name, role, email, phone, image_url, isAdmin) VALUES (?, ?, ?, ?, ?, ?)`,
+//       [name, role, email, phone, image_url || null, isAdmin || false]
 //     );
 //     res.status(201).json({ message: 'Staff member created', staffId: result.insertId });
 //   } catch (err) {
@@ -30,14 +30,14 @@
 //   }
 // };
 
-// // Update a staff member including image
+// // Update a staff member including image_url
 // exports.updateStaff = async (req, res) => {
 //   const staffId = req.params.id;
-//   const { name, role, email, phone, image, isAdmin } = req.body;
+//   const { name, role, email, phone, image_url, isAdmin } = req.body;
 //   try {
 //     await db.execute(
-//       `UPDATE staff SET name = ?, role = ?, email = ?, phone = ?, image = ?, isAdmin = ? WHERE id = ?`,
-//       [name, role, email, phone, image || null, isAdmin, staffId]
+//       `UPDATE staff SET name = ?, role = ?, email = ?, phone = ?, image_url = ?, isAdmin = ? WHERE id = ?`,
+//       [name, role, email, phone, image_url || null, isAdmin, staffId]
 //     );
 //     res.json({ message: 'Staff member updated' });
 //   } catch (err) {

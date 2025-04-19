@@ -2,98 +2,132 @@ const { pool } = require("../config/database");
 
 class Product {
   static async create(productData) {
+    
     const {
-      name,
-      description,
-      category_name,
-      subcategory_name,
-      supplier_name,
-      brand_name,
-      quantity ,
-      price,
-      stock,
-      image_url
+        name,
+        description,
+        category_name,
+        subcategory_name,
+        supplier_name,
+        brand_name,
+        quantity,
+        price,
+        stock,
+        image_url
     } = productData;
 
+    
+    console.log('Incoming quantity:', quantity);
+    console.log('Category:', category_name);
+
+    // Get or create category
     const [existingCategory] = await pool.execute(
-      "SELECT id FROM categories WHERE name = ?",
-      [category_name]
+        "SELECT id FROM categories WHERE name = ?",
+        [category_name]
     );
     let category_id;
     if (existingCategory.length === 0) {
-      const [categoryResult] = await pool.execute(
-        "INSERT INTO categories (name) VALUES (?)",
-        [category_name]
-      );
-      category_id = categoryResult.insertId;
+        const [categoryResult] = await pool.execute(
+            "INSERT INTO categories (name) VALUES (?)",
+            [category_name]
+        );
+        category_id = categoryResult.insertId;
     } else {
-      category_id = existingCategory[0].id;
+        category_id = existingCategory[0].id;
     }
 
+    // Get or create subcategory
     const [existingSubcategory] = await pool.execute(
-      "SELECT id FROM subcategories WHERE name = ? AND category_id = ?",
-      [subcategory_name, category_id]
+        "SELECT id FROM subcategories WHERE name = ? AND category_id = ?",
+        [subcategory_name, category_id]
     );
     let subcategory_id;
     if (existingSubcategory.length === 0) {
-      const [subcategoryResult] = await pool.execute(
-        "INSERT INTO subcategories (name, category_id) VALUES (?, ?)",
-        [subcategory_name, category_id]
-      );
-      subcategory_id = subcategoryResult.insertId;
+        const [subcategoryResult] = await pool.execute(
+            "INSERT INTO subcategories (name, category_id) VALUES (?, ?)",
+            [subcategory_name, category_id]
+        );
+        subcategory_id = subcategoryResult.insertId;
     } else {
-      subcategory_id = existingSubcategory[0].id;
+        subcategory_id = existingSubcategory[0].id;
     }
 
+    // Get or create supplier
     const [existingSupplier] = await pool.execute(
-      "SELECT id FROM suppliers WHERE name = ?",
-      [supplier_name]
+        "SELECT id FROM suppliers WHERE name = ?",
+        [supplier_name]
     );
     let supplier_id;
     if (existingSupplier.length === 0) {
-      const [supplierResult] = await pool.execute(
-        "INSERT INTO suppliers (name, category_id) VALUES (?, ?)",
-        [supplier_name, category_id]
-      );
-      supplier_id = supplierResult.insertId;
+        const [supplierResult] = await pool.execute(
+            `INSERT INTO suppliers 
+             (name, category, product_name, brand) 
+             VALUES (?, ?, ?, ?)`,
+            [supplier_name, category_name, name, brand_name]
+        );
+        supplier_id = supplierResult.insertId;
     } else {
-      supplier_id = existingSupplier[0].id;
+        supplier_id = existingSupplier[0].id;
     }
 
+    // Get or create brand
     const [existingBrand] = await pool.execute(
-      "SELECT id FROM brands WHERE name = ?",
-      [brand_name]
+        "SELECT id FROM brands WHERE name = ?",
+        [brand_name]
     );
     let brand_id;
     if (existingBrand.length === 0) {
-      const [brandResult] = await pool.execute(
-        "INSERT INTO brands (name) VALUES (?)",
-        [brand_name]
-      );
-      brand_id = brandResult.insertId;
+        const [brandResult] = await pool.execute(
+            "INSERT INTO brands (name) VALUES (?)",
+            [brand_name]
+        );
+        brand_id = brandResult.insertId;
     } else {
-      brand_id = existingBrand[0].id;
+        brand_id = existingBrand[0].id;
     }
 
-    const query = `
-      INSERT INTO products (name, description, category_id, subcategory_id, supplier_id, brand_id, quantity, price, stock, image_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const [result] = await pool.execute(query, [
-      name,
-      description,
-      category_id,
-      subcategory_id,
-      supplier_id,
-      brand_id,
-      quantity !== undefined ? quantity : 0,
-      price,
-      stock,
-      image_url || null
-    ]);
+    console.log('Model received:', JSON.stringify(productData, null, 2));
 
-    return { id: result.insertId, ...productData };
-  }
+  
+    // Validate fertilizer quantity
+    if (category_name.toLowerCase() === 'fertilizer') {
+      if (quantity === undefined || quantity === null || quantity === '') {
+        throw new Error(`Quantity is required for fertilizer products. Received: ${quantity}`);
+      }
+      
+      // Ensure quantity is a valid number
+      const numericQuantity = Number(quantity);
+      if (isNaN(numericQuantity)) {
+        throw new Error(`Quantity must be a number. Received: ${quantity}`);
+      }
+    }
+  
+    // Set final quantity value
+    const finalQuantity = category_name.toLowerCase() === 'fertilizer' 
+      ? Number(quantity)
+      : null;
+    
+  // Create product
+  const [result] = await pool.execute(
+    `INSERT INTO products 
+     (name, description, category_id, subcategory_id, supplier_id, brand_id, quantity, price, stock, image_url)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+        name,
+        description,
+        category_id,
+        subcategory_id,
+        supplier_id,
+        brand_id,
+        finalQuantity, 
+        price,
+        stock,
+        image_url || null
+    ]
+);
+
+return { id: result.insertId, ...productData, quantity: finalQuantity };}
+
 
   static async updateById(id, productData) {
     const {
@@ -219,13 +253,24 @@ class Product {
 
   static async getAll() {
     const [rows] = await pool.execute(`
-      SELECT p.*, c.name as category, s.name as subCategory, b.name as brand 
-      FROM products p
-      JOIN categories c ON p.category_id = c.id
-      JOIN subcategories s ON p.subcategory_id = s.id
-      JOIN brands b ON p.brand_id = b.id
+      SELECT 
+  p.*, 
+  c.name AS category, 
+  sc.name AS subCategory, 
+  b.name AS brand,
+  sp.name AS supplier
+FROM products p
+JOIN categories c ON p.category_id = c.id
+JOIN subcategories sc ON p.subcategory_id = sc.id
+JOIN brands b ON p.brand_id = b.id
+JOIN suppliers sp ON p.supplier_id = sp.id
+
     `);
-    return rows;
+    return rows.map(row => ({
+      ...row,
+      // Convert NULL to undefined for cleaner response
+      quantity: row.quantity !== null ? row.quantity : undefined
+  }));
   }
 
   static async getFilterOptions() {

@@ -11,7 +11,7 @@ class UserModel {
 
    static async getById(userId) {
       const [users] = await pool.query(
-         'SELECT id, name, email, phone, image, isAdmin, role, created_at FROM users WHERE id = ?',
+         'SELECT id, name, email, phone, image_url, isAdmin, role, created_at FROM users WHERE id = ?',
          [userId]
       );
 
@@ -22,26 +22,28 @@ class UserModel {
 
    static async create(user) {
       const [result] = await pool.query(
-         'INSERT INTO users (name, email, password, phone, image, isAdmin, role) ' +
+         'INSERT INTO users (name, email, password, phone, image_url, isAdmin, role) ' +
          'VALUES (?, ?, ?, ?, ?, ?, ?)',
          [
             user.name,
             user.email,
             user.password,
             user.phone,
-            user.image,
+            user.image_url,
             user.isAdmin,
             user.role,
          ]
       );
 
       const [users] = await pool.query(
-         'SELECT id, name, email, phone, image, isAdmin, role, created_at FROM users WHERE id = ?',
+         'SELECT id, name, email, phone, image_url, isAdmin, role, created_at FROM users WHERE id = ?',
          [result.insertId]
       );
 
       return users[0];
    }
+
+   
 }
 
 module.exports = UserModel;

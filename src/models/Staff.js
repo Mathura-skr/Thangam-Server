@@ -9,7 +9,7 @@
 //                 role VARCHAR(255) NOT NULL,
 //                 email VARCHAR(255) UNIQUE NOT NULL,
 //                 phone VARCHAR(15),
-//                 image VARCHAR(500),  
+//                 image_url VARCHAR(500),  
 //                 isAdmin BOOLEAN DEFAULT FALSE
 //             )
 //         `;

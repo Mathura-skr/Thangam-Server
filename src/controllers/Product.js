@@ -1,7 +1,8 @@
 const Product = require('../models/Product');
 
 exports.create = async (req, res) => {
-  console.log(req.body);
+  console.log("Raw request body:", req.body);
+  
   try {
     const {
       name,
@@ -29,11 +30,12 @@ exports.create = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    if (category_name === "fertilizer" && (quantity == null || quantity === "")) {
+    if (category_name.toLowerCase() === "fertilizer" && (quantity == null || quantity === "")) {
       return res.status(400).json({ message: "Quantity is required for fertilizer" });
     }
-
-    const finalQuantity = category_name === "fertilizer" ? quantity : null;
+    
+    const finalQuantity = category_name.toLowerCase() === "fertilizer" ? quantity : null;
+    
 
     const newProduct = await Product.create({
       name,
