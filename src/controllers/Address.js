@@ -30,12 +30,9 @@ class AddressController {
         try {
             const userId = req.params.userId;
             const addresses = await AddressModel.getByUserId(userId);
-
-            if (addresses.length === 0) {
-                return res.status(404).json({ message: 'No addresses found for this user' });
-            }
-
-            res.status(200).json(addresses);
+    
+            // ✅ Return 200 with empty array instead of 404
+            return res.status(200).json(addresses);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });

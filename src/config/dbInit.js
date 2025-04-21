@@ -91,12 +91,7 @@ const createTables = async () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     product_id INT NOT NULL,
-    product_name VARCHAR(255) NOT NULL,
-    address TEXT NOT NULL,
-    paymentMode VARCHAR(50) NOT NULL,
-    quantity INT NOT NULL,
-    total_price DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(50) NOT NULL,
+    unit INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );`;
@@ -107,7 +102,7 @@ const createTables = async () => {
     user_id INT NOT NULL,
     product_id INT NOT NULL,
     address_id INT NOT NULL,
-    quantity INT NOT NULL,
+    unit INT NOT NULL,
     total_price DECIMAL(10,2) NOT NULL,
     paymentMode VARCHAR(50),
     status ENUM('pending', 'shipped', 'cancelled') DEFAULT 'pending',

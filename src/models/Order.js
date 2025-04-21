@@ -2,10 +2,10 @@ const { pool } = require('../config/database');
 
 class OrderModel {
     static async create(order) {
-        const { user_id, product_id, quantity, total_price, status } = order;
+        const { user_id, product_id, unit, total_price, status } = order;
         const [result] = await pool.query(
-            'INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, ?)',
-            [user_id, product_id, quantity, total_price, status]
+            'INSERT INTO orders (user_id, product_id, unit, total_price, status) VALUES (?, ?, ?, ?, ?)',
+            [user_id, product_id, unit, total_price, status]
         );
         return { id: result.insertId, ...order };
     }

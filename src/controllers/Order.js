@@ -2,11 +2,11 @@ const { pool } = require('../config/database');
 
 exports.create = async (req, res) => {
     try {
-        const { user_id, product_id, address_id, quantity, total_price, status, paymentMode } = req.body;
+        const { user_id, product_id, address_id, unit, total_price, status, paymentMode } = req.body;
 
         const [result] = await pool.query(
-            'INSERT INTO orders (user_id, product_id, address_id, quantity, total_price, status, paymentMode) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [user_id, product_id, address_id, quantity, total_price, status, paymentMode]
+            'INSERT INTO orders (user_id, product_id, address_id, unit, total_price, status, paymentMode) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [user_id, product_id, address_id, unit, total_price, status, paymentMode]
         );
 
         const newOrder = {
@@ -14,7 +14,7 @@ exports.create = async (req, res) => {
             user_id,
             product_id,
             address_id,
-            quantity,
+            unit,
             total_price,
             status,
             paymentMode

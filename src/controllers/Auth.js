@@ -76,16 +76,18 @@ class Auth {
          data.password = await bcrypt.hash(data.password, 12);
    
          const allowedRoles = ['user', 'admin', 'staff'];
-         const finalRole = allowedRoles.includes(data.role) ? data.role : 'user';
-   
+         const finalRole = data.role && allowedRoles.includes(data.role) ? data.role : 'user';
+         const isAdmin = data.role === 'admin'; // Only make admin if role is explicitly 'admin'
+         
          const newUser = await this.userModel.create({
             name: data.name,
             email: data.email,
             password: data.password,
             phone: data.phone,
-            isAdmin: data.isAdmin ?? false,
+            isAdmin,
             role: finalRole,
          });
+         
    
          const token = jwt.sign(
             { email: newUser.email, userId: newUser.id },

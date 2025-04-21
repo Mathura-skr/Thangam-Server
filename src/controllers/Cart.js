@@ -1,6 +1,5 @@
-const CartModel = require('../models/Cart'); 
+const CartModel = require('../models/Cart');
 
-// Create a new cart item
 exports.create = async (req, res) => {
     try {
         const cartData = req.body;
@@ -12,7 +11,6 @@ exports.create = async (req, res) => {
     }
 };
 
-// Get all cart items for a user
 exports.getByUserId = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -24,7 +22,6 @@ exports.getByUserId = async (req, res) => {
     }
 };
 
-// Update a cart item by ID
 exports.updateById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -42,11 +39,13 @@ exports.updateById = async (req, res) => {
     }
 };
 
-// Delete a cart item by ID
 exports.deleteById = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log("Attempting to delete cart item with id:", id); 
+
         const deleted = await CartModel.deleteById(id);
+
         if (deleted) {
             res.status(200).json({ message: 'Cart item deleted successfully' });
         } else {
@@ -58,7 +57,6 @@ exports.deleteById = async (req, res) => {
     }
 };
 
-// Delete all cart items for a specific user
 exports.deleteByUserId = async (req, res) => {
     try {
         const { userId } = req.params;
