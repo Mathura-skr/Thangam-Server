@@ -62,7 +62,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favourites', favouriteRoutes);
-// app.use('/api/staff', staffRoutes);
+//app.use('/api/staff', staffRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/filters', filterRoutes);
 

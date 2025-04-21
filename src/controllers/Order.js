@@ -71,7 +71,20 @@ exports.getAll = async (req, res) => {
         const { page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
-        const [orders] = await pool.query('SELECT * FROM orders LIMIT ? OFFSET ?', [parseInt(limit), offset]);
+        const [orders] = await pool.query(`
+            SELECT o.*, 
+                CONCAT(
+                    IFNULL(a.street, ''), ', ', 
+                    IFNULL(a.city, ''), ', ', 
+                    IFNULL(a.district, ''), ', ', 
+                    IFNULL(a.province, ''), ', ', 
+                    IFNULL(a.zip_code, '')
+                ) AS full_address
+            FROM orders o
+            LEFT JOIN addresses a ON o.address_id = a.id
+            ORDER BY o.id DESC
+            LIMIT ? OFFSET ?
+        `, [parseInt(limit), offset]);
 
         const [total] = await pool.query('SELECT COUNT(*) AS total FROM orders');
 
@@ -84,3 +97,4 @@ exports.getAll = async (req, res) => {
         res.status(500).json({ message: 'Error getting orders, please try again later' });
     }
 };
+

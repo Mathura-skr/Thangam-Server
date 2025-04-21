@@ -20,17 +20,25 @@ class OrderModel {
 
     static async getAll(page = 1, limit = 10) {
         const offset = (page - 1) * limit;
+    
         const [orders] = await pool.query(
-            'SELECT * FROM orders LIMIT ? OFFSET ?',
+            `SELECT o.*, 
+                    a.street, a.city, a.district, a.province, a.zip_code 
+             FROM orders o
+             LEFT JOIN addresses a ON o.address_id = a.id
+             LIMIT ? OFFSET ?`,
             [limit, offset]
         );
-
+    
         const [total] = await pool.query('SELECT COUNT(*) AS total FROM orders');
+    
         return {
             total: total[0].total,
-            orders: orders
+            orders
         };
     }
+    
+    
 
     static async updateById(id, updatedFields) {
         const fields = Object.keys(updatedFields);
