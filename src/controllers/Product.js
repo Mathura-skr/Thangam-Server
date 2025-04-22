@@ -1,5 +1,13 @@
 const Product = require('../models/Product');
 
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
+
+// Function to convert a date string to ISO format (if not already)
+const toISOFormat = (date) => {
+  const parsedDate = new Date(date);
+  return parsedDate.toISOString();
+};
+
 exports.create = async (req, res) => {
   console.log("Raw request body:", req.body);
 
@@ -38,6 +46,28 @@ exports.create = async (req, res) => {
 
     const finalQuantity = category_name.toLowerCase() === "fertilizer" ? quantity : null;
 
+    if (category_name.toLowerCase() === "fertilizer") {
+      if (!manufactured_date || !expiry_date) {
+        return res.status(400).json({ message: "Manufactured and expiry dates are required for fertilizers" });
+      }
+      // Normalize dates
+      const isoManufacturedDate = toISOFormat(manufactured_date);
+      const isoExpiryDate = toISOFormat(expiry_date);
+
+      // Validate the dates
+      if (new Date(isoExpiryDate) <= new Date(isoManufacturedDate)) {
+        return res.status(400).json({ message: "Expiry date must be after manufactured date" });
+      }
+    }
+
+    if (manufactured_date && !isoDateRegex.test(toISOFormat(manufactured_date))) {
+      return res.status(400).json({ message: "Manufactured date must be in ISO format" });
+    }
+
+    if (expiry_date && new Date(expiry_date) <= new Date()) {
+      return res.status(400).json({ message: "Expiry date must be in the future" });
+    }
+
     const newProduct = await Product.create({
       name,
       description,
@@ -49,8 +79,8 @@ exports.create = async (req, res) => {
       price,
       stock,
       image_url: image_url || null,
-      manufactured_date: manufactured_date || null,
-      expiry_date: expiry_date || null
+      manufactured_date: manufactured_date ? toISOFormat(manufactured_date) : null,
+      expiry_date: expiry_date ? toISOFormat(expiry_date) : null
     });
 
     res.status(201).json(newProduct);
@@ -59,6 +89,7 @@ exports.create = async (req, res) => {
     res.status(500).json({ message: "Error creating product, please try again later" });
   }
 };
+
 
 exports.updateById = async (req, res) => {
   try {

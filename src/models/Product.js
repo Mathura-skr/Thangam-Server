@@ -108,113 +108,94 @@ class Product {
       stock,
       image_url,
       manufactured_date,
-      expiry_date,
+      expiry_date
     } = productData;
   
-    // Get or create category
+    // Resolve category
     const [existingCategory] = await pool.execute(
       "SELECT id FROM categories WHERE name = ?",
       [category_name]
     );
-    let category_id;
-    if (existingCategory.length === 0) {
-      const [categoryResult] = await pool.execute(
-        "INSERT INTO categories (name) VALUES (?)",
-        [category_name]
-      );
-      category_id = categoryResult.insertId;
-    } else {
-      category_id = existingCategory[0].id;
-    }
+    const category_id = existingCategory.length
+      ? existingCategory[0].id
+      : (await pool.execute("INSERT INTO categories (name) VALUES (?)", [category_name]))[0].insertId;
   
-    // Get or create subcategory
+    // Resolve subcategory
     const [existingSubcategory] = await pool.execute(
       "SELECT id FROM subcategories WHERE name = ? AND category_id = ?",
       [subcategory_name, category_id]
     );
-    let subcategory_id;
-    if (existingSubcategory.length === 0) {
-      const [subcategoryResult] = await pool.execute(
-        "INSERT INTO subcategories (name, category_id) VALUES (?, ?)",
-        [subcategory_name, category_id]
-      );
-      subcategory_id = subcategoryResult.insertId;
-    } else {
-      subcategory_id = existingSubcategory[0].id;
-    }
+    const subcategory_id = existingSubcategory.length
+      ? existingSubcategory[0].id
+      : (await pool.execute(
+          "INSERT INTO subcategories (name, category_id) VALUES (?, ?)",
+          [subcategory_name, category_id]
+        ))[0].insertId;
   
-    // Get or create supplier
+    // Resolve supplier
     const [existingSupplier] = await pool.execute(
       "SELECT id FROM suppliers WHERE name = ?",
       [supplier_name]
     );
-    let supplier_id;
-    if (existingSupplier.length === 0) {
-      const [supplierResult] = await pool.execute(
-        "INSERT INTO suppliers (name, category_id) VALUES (?, ?)",
-        [supplier_name, category_id]
-      );
-      supplier_id = supplierResult.insertId;
-    } else {
-      supplier_id = existingSupplier[0].id;
-    }
+    const supplier_id = existingSupplier.length
+      ? existingSupplier[0].id
+      : (await pool.execute(
+          `INSERT INTO suppliers (name, category, product_name, brand) VALUES (?, ?, ?, ?)`,
+          [supplier_name, category_name, name, brand_name]
+        ))[0].insertId;
   
-    // Get or create brand
+    // Resolve brand
     const [existingBrand] = await pool.execute(
       "SELECT id FROM brands WHERE name = ?",
       [brand_name]
     );
-    let brand_id;
-    if (existingBrand.length === 0) {
-      const [brandResult] = await pool.execute(
-        "INSERT INTO brands (name) VALUES (?)",
-        [brand_name]
-      );
-      brand_id = brandResult.insertId;
-    } else {
-      brand_id = existingBrand[0].id;
-    }
+    const brand_id = existingBrand.length
+      ? existingBrand[0].id
+      : (await pool.execute("INSERT INTO brands (name) VALUES (?)", [brand_name]))[0].insertId;
   
-    // Convert dates to valid JS Date objects or null
-    const validManufacturedDate =
-      manufactured_date && !isNaN(new Date(manufactured_date))
-        ? new Date(manufactured_date)
-        : null;
+    // Determine final quantity
+    const finalQuantity = category_name.toLowerCase() === "fertilizer" && quantity
+      ? Number(quantity)
+      : null;
   
-    const validExpiryDate =
-      expiry_date && !isNaN(new Date(expiry_date))
-        ? new Date(expiry_date)
-        : null;
+    // Prepare image URL
+    const finalImageUrl = Array.isArray(image_url)
+      ? (image_url.length > 0 ? image_url[0] : null)
+      : image_url || null;
   
+    // Prepare date strings
+    const prepareDate = (date) => date ? new Date(date).toISOString().split('T')[0] : null;
+  
+    // SQL Query
     const query = `
-      UPDATE products
-      SET name = ?, description = ?, category_id = ?, subcategory_id = ?, supplier_id = ?, brand_id = ?, quantity = ?, price = ?, stock = ?, image_url = ?, manufactured_date = ?, expiry_date = ?
+      UPDATE products SET
+        name = ?, description = ?, category_id = ?, subcategory_id = ?, 
+        supplier_id = ?, brand_id = ?, quantity = ?, price = ?, 
+        stock = ?, image_url = ?, manufactured_date = ?, expiry_date = ?
       WHERE id = ?
     `;
   
-    await pool.execute(query, [
+    const params = [
       name,
       description,
       category_id,
       subcategory_id,
       supplier_id,
       brand_id,
-      quantity !== undefined ? quantity : null,
+      finalQuantity,
       price,
       stock,
-      image_url || null,
-      validManufacturedDate,
-      validExpiryDate,
-      id,
-    ]);
+      finalImageUrl,
+      prepareDate(manufactured_date),
+      prepareDate(expiry_date),
+      id
+    ];
   
-    return {
-      id,
-      ...productData,
-      manufactured_date: validManufacturedDate,
-      expiry_date: validExpiryDate,
-    };
+    await pool.execute(query, params);
+  
+    return { message: "Product updated successfully", id, ...productData, quantity: finalQuantity };
   }
+  
   
 
   static async deleteById(id) {
