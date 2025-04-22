@@ -19,9 +19,10 @@ const orderRoutes = require('./routes/orderRoutes');
 const productRoutes = require('./routes/productRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const favouriteRoutes = require('./routes/favouriteRoutes');
-// const staffRoutes = require('./routes/staffRoutes');
+const rentRoutes = require('./routes/rentalRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const filterRoutes = require('./routes/filterRoutes');
+
 
 const createAuthRouter  = require('./routes/authRoutes');
 const User = require('./models/User'); // Import User Model
@@ -62,7 +63,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favourites', favouriteRoutes);
-//app.use('/api/staff', staffRoutes);
+app.use('/api/rent', rentRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/filters', filterRoutes);
 

@@ -54,17 +54,17 @@ const createTables = async () => {
 
   const supplierTable = `
     CREATE TABLE IF NOT EXISTS suppliers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    address VARCHAR(255) NOT NULL,
-    category VARCHAR(255) NOT NULL,       
-    product_name VARCHAR(255) NOT NULL,
-    brand VARCHAR(255) NOT NULL,
-    quantity INT DEFAULT 0,
-    stock INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`;
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        phone VARCHAR(20) NOT NULL,
+        address VARCHAR(255) NOT NULL,
+        category VARCHAR(255) NOT NULL,       
+        product_name VARCHAR(255) NOT NULL,
+        brand VARCHAR(255) NOT NULL,
+        quantity INT DEFAULT 0,
+        stock INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`;
 
   const productTable = `
     CREATE TABLE IF NOT EXISTS products (
@@ -79,6 +79,8 @@ const createTables = async () => {
         price DECIMAL(10, 2) NOT NULL,
         stock INT NOT NULL,
         image_url TEXT,
+        manufactured_date DATE DEFAULT NULL,
+        expiry_date DATE DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
         FOREIGN KEY (subcategory_id) REFERENCES subcategories(id) ON DELETE CASCADE,
@@ -88,32 +90,30 @@ const createTables = async () => {
 
   const cartTable = `
     CREATE TABLE IF NOT EXISTS carts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    product_id INT NOT NULL,
-    unit INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (product_id) REFERENCES products(id)
-);`;
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        product_id INT NOT NULL,
+        unit INT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    );`;
 
-const orderTable = `
-CREATE TABLE IF NOT EXISTS orders (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  product_id INT NOT NULL,
-  address_id INT NOT NULL,
-  unit INT NOT NULL,
-  total_price DECIMAL(10,2) NOT NULL,
-  paymentMode VARCHAR(50),
-  status ENUM('pending', 'processing', 'shipped', 'completed', 'cancelled') DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-  FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE CASCADE
-);`;
-
+  const orderTable = `
+    CREATE TABLE IF NOT EXISTS orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        product_id INT NOT NULL,
+        address_id INT NOT NULL,
+        unit INT NOT NULL,
+        total_price DECIMAL(10,2) NOT NULL,
+        paymentMode VARCHAR(50),
+        status ENUM('pending', 'processing', 'shipped', 'completed', 'cancelled') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE CASCADE
+    );`;
 
   const reviewTable = `
     CREATE TABLE IF NOT EXISTS reviews (
@@ -137,6 +137,21 @@ CREATE TABLE IF NOT EXISTS orders (
         FOREIGN KEY (product_id) REFERENCES products(id)
     );`;
 
+    const rentalProductTable = `
+  CREATE TABLE IF NOT EXISTS rental_products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    brand VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    subcategory VARCHAR(100) NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );`;
+
+
+  
+
   try {
     const connection = await pool.getConnection();
 
@@ -153,13 +168,16 @@ CREATE TABLE IF NOT EXISTS orders (
     await connection.query(orderTable);
     await connection.query(reviewTable);
     await connection.query(favouritesTable);
+    await connection.query(rentalProductTable);
+
 
     connection.release();
     console.log("✅ All tables created or already exist");
   } catch (error) {
     console.error("❌ MySQL Table Creation Error:", error.message);
   }
-  //TODO: env
+
+  // Seed admin user
   const adminEmail = "admin@thangam.com";
   const adminPassword = "admin123";
   const isAdmin = 1;

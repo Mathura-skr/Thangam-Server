@@ -2,7 +2,7 @@ const Product = require('../models/Product');
 
 exports.create = async (req, res) => {
   console.log("Raw request body:", req.body);
-  
+
   try {
     const {
       name,
@@ -15,6 +15,8 @@ exports.create = async (req, res) => {
       price,
       stock,
       image_url,
+      manufactured_date,
+      expiry_date
     } = req.body;
 
     if (
@@ -33,9 +35,8 @@ exports.create = async (req, res) => {
     if (category_name.toLowerCase() === "fertilizer" && (quantity == null || quantity === "")) {
       return res.status(400).json({ message: "Quantity is required for fertilizer" });
     }
-    
+
     const finalQuantity = category_name.toLowerCase() === "fertilizer" ? quantity : null;
-    
 
     const newProduct = await Product.create({
       name,
@@ -48,6 +49,8 @@ exports.create = async (req, res) => {
       price,
       stock,
       image_url: image_url || null,
+      manufactured_date: manufactured_date || null,
+      expiry_date: expiry_date || null
     });
 
     res.status(201).json(newProduct);
@@ -59,6 +62,9 @@ exports.create = async (req, res) => {
 
 exports.updateById = async (req, res) => {
   try {
+
+    
+
     const { id } = req.params;
     const updatedFields = req.body;
 
@@ -72,6 +78,8 @@ exports.updateById = async (req, res) => {
       quantity,
       price,
       stock,
+      manufactured_date,
+      expiry_date
     } = updatedFields;
 
     if (
@@ -87,15 +95,17 @@ exports.updateById = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    if (category_name === "fertilizer" && (quantity == null || quantity === "")) {
+    if (category_name.toLowerCase() === "fertilizer" && (quantity == null || quantity === "")) {
       return res.status(400).json({ message: "Quantity is required for fertilizer" });
     }
 
-    updatedFields.quantity = category_name === "fertilizer" ? quantity : null;
+    updatedFields.quantity = category_name.toLowerCase() === "fertilizer" ? quantity : null;
     updatedFields.image_url = updatedFields.image_url || null;
+    updatedFields.manufactured_date = manufactured_date || null;
+    updatedFields.expiry_date = expiry_date || null;
 
     const updatedProduct = await Product.updateById(id, updatedFields);
-
+  
     if (updatedProduct) {
       res.status(200).json(updatedProduct);
     } else {
@@ -105,6 +115,7 @@ exports.updateById = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Error updating product, please try again later" });
   }
+
 };
 
 exports.getAll = async (req, res) => {
@@ -142,10 +153,6 @@ exports.deleteById = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Error deleting product, please try again later' });
   }
-
-  
-  
-  
 };
 
 exports.getFilterOptions = async (req, res) => {
