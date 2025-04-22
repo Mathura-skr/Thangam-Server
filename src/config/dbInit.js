@@ -179,7 +179,7 @@ const createTables = async () => {
 
   // Seed admin user
   const adminEmail = "admin@thangam.com";
-  const adminPassword = "admin123";
+  const adminPassword = "admin1234";
   const isAdmin = 1;
   const bcrypt = require("bcrypt");
 
