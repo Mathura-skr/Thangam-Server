@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const OrderModel = require('../models/Order');
 
 exports.create = async (req, res) => {
     try {
@@ -97,4 +97,15 @@ exports.getAll = async (req, res) => {
         res.status(500).json({ message: 'Error getting orders, please try again later' });
     }
 };
+
+exports.getSalesSummary = async (req, res) => {
+    try {
+        const summary = await OrderModel.getSalesSummary();
+        res.status(200).json(summary);
+    } catch (error) {
+        console.error('Error fetching sales summary:', error);
+        res.status(500).json({ message: 'Error fetching sales summary' });
+    }
+};
+
 

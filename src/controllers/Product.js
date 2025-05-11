@@ -226,3 +226,21 @@ exports.getRelated = async (req, res) => {
   }
 };
 
+
+exports.search = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim() === "") {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    const products = await Product.search(query);
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ message: "Error searching products, please try again later" });
+  }
+};
+

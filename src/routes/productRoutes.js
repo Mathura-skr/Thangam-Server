@@ -9,6 +9,7 @@ router.get('/:id', productController.getById);
 
 router.post('/', authMiddleware, productController.create);
 router.get('/', productController.getAll);
+router.get('/search', productController.search);
 router.put('/:id', authMiddleware, productController.updateById);
 router.delete('/:id', authMiddleware, productController.deleteById);
 

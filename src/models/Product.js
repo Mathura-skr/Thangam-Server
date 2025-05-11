@@ -283,6 +283,29 @@ class Product {
     return rows;
   }
   
+  static async searchByName(query) {
+  const searchTerm = `%${query}%`;
+  const [rows] = await pool.execute(
+    `
+    SELECT 
+      p.id, p.name, p.price, p.image_url,
+      c.name AS category,
+      sc.name AS subCategory,
+      b.name AS brand,
+      sp.name AS supplier
+    FROM products p
+    JOIN categories c ON p.category_id = c.id
+    JOIN subcategories sc ON p.subcategory_id = sc.id
+    JOIN brands b ON p.brand_id = b.id
+    JOIN suppliers sp ON p.supplier_id = sp.id
+    WHERE p.name LIKE ?
+    `,
+    [searchTerm]
+  );
+
+  return rows;
+}
+
   
 }
 
