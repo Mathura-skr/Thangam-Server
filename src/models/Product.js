@@ -211,17 +211,22 @@ class Product {
         c.name AS category_name,
         sc.name AS subcategory_name,
         s.name AS supplier_name,
-        b.name AS brand_name
+        b.name AS brand_name,
+        ROUND(AVG(r.rating), 1) AS average_rating,
+        COUNT(r.id) AS review_count
       FROM products p
       JOIN categories c ON p.category_id = c.id
       JOIN subcategories sc ON p.subcategory_id = sc.id
       JOIN suppliers s ON p.supplier_id = s.id
       JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN reviews r ON p.id = r.product_id
       WHERE p.id = ?
+      GROUP BY p.id
     `;
     const [rows] = await pool.execute(query, [id]);
     return rows[0];
   }
+  
 
   static async getAll() {
     const [rows] = await pool.execute(`
@@ -230,18 +235,24 @@ class Product {
         c.name AS category, 
         sc.name AS subCategory, 
         b.name AS brand,
-        sp.name AS supplier
+        sp.name AS supplier,
+        ROUND(AVG(r.rating), 1) AS average_rating,
+        COUNT(r.id) AS review_count
       FROM products p
       JOIN categories c ON p.category_id = c.id
       JOIN subcategories sc ON p.subcategory_id = sc.id
       JOIN brands b ON p.brand_id = b.id
       JOIN suppliers sp ON p.supplier_id = sp.id
+      LEFT JOIN reviews r ON p.id = r.product_id
+      GROUP BY p.id
     `);
+  
     return rows.map(row => ({
       ...row,
       quantity: row.quantity !== null ? row.quantity : undefined
     }));
   }
+  
 
   static async getFilterOptions() {
     const [categories] = await pool.execute(`SELECT name FROM categories`);
@@ -256,6 +267,23 @@ class Product {
       quantities: quantities.map(q => q.quantity)
     };
   }
+
+  static async getRelatedProducts(category, excludeId) {
+    const query = `
+      SELECT 
+        p.id, p.name, 
+        CAST(p.price AS DECIMAL(10,2)) as price,
+        p.image_url
+      FROM products p
+      JOIN categories c ON p.category_id = c.id
+      WHERE c.name = ? AND p.id != ?
+      LIMIT 4
+    `;
+    const [rows] = await pool.execute(query, [category, excludeId]);
+    return rows;
+  }
+  
+  
 }
 
 module.exports = Product;
