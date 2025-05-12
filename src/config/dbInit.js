@@ -1,18 +1,21 @@
 const { pool } = require("./database");
 
 const createTables = async () => {
-  const userTable = `
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        phone VARCHAR(20),
-        image_url VARCHAR(255),
-        isAdmin BOOLEAN DEFAULT FALSE,
-        role ENUM('admin', 'user', 'staff') DEFAULT 'user',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );`;
+const userTable = `
+  CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(100) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      phone VARCHAR(20),
+      image_url VARCHAR(255),
+      isAdmin BOOLEAN DEFAULT FALSE,
+      role ENUM('admin', 'user', 'staff') DEFAULT 'user',
+      resetToken VARCHAR(255),
+      resetTokenExpiry BIGINT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );`;
+
 
   const addressTable = `
     CREATE TABLE IF NOT EXISTS addresses (
@@ -137,17 +140,21 @@ const createTables = async () => {
         FOREIGN KEY (product_id) REFERENCES products(id)
     );`;
 
-    const rentalProductTable = `
+ const rentalProductTable = `
   CREATE TABLE IF NOT EXISTS rental_products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     brand VARCHAR(100) NOT NULL,
     description TEXT,
-    price DECIMAL(10, 2) NOT NULL,
+    price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
     subcategory VARCHAR(100) NOT NULL,
     image_url TEXT,
+    availability_status ENUM('available', 'unavailable') DEFAULT 'available',
+    stock INT DEFAULT 0 CHECK (stock >= 0),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );`;
+  );
+`;
+
 
 
   

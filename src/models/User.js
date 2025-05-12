@@ -43,6 +43,33 @@ class UserModel {
       return users[0];
    }
 
+      static async saveResetToken(userId, token, expiry) {
+      await pool.query(
+         'UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?',
+         [token, expiry, userId]
+      );
+   }
+
+   static async getByResetToken(token) {
+      const [users] = await pool.query(
+         'SELECT * FROM users WHERE resetToken = ? AND resetTokenExpiry > ?',
+         [token, Date.now()]
+      );
+
+      if (users.length === 0) return null;
+
+      return users[0];
+   }
+
+   static async updatePassword(userId, newPassword) {
+      await pool.query('UPDATE users SET password = ? WHERE id = ?', [newPassword, userId]);
+   }
+
+   static async clearResetToken(userId) {
+      await pool.query('UPDATE users SET resetToken = NULL, resetTokenExpiry = NULL WHERE id = ?', [userId]);
+   }
+
+
    
 }
 
