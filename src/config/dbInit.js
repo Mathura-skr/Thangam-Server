@@ -16,19 +16,21 @@ const userTable = `
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`;
 
+const addressTable = `
+  CREATE TABLE IF NOT EXISTS addresses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    district VARCHAR(100) NOT NULL,
+    province VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(20) NOT NULL,
+    address_type ENUM('billing', 'delivery') NOT NULL DEFAULT 'delivery',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+`;
 
-  const addressTable = `
-    CREATE TABLE IF NOT EXISTS addresses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        street VARCHAR(255) NOT NULL,
-        city VARCHAR(100) NOT NULL,
-        district VARCHAR(100) NOT NULL,
-        province VARCHAR(100) NOT NULL,
-        zip_code VARCHAR(20) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );`;
 
   const categoryTable = `
     CREATE TABLE IF NOT EXISTS categories (
@@ -185,7 +187,7 @@ const userTable = `
   }
 
   // Seed admin user
-  const adminEmail = "admin@thangam.com";
+  const adminEmail = "thangamtools@gmail.com";
   const adminPassword = "admin1234";
   const isAdmin = 1;
   const bcrypt = require("bcrypt");

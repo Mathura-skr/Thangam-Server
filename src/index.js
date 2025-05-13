@@ -22,6 +22,7 @@ const favouriteRoutes = require('./routes/favouriteRoutes');
 const rentRoutes = require('./routes/rentalRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const filterRoutes = require('./routes/filterRoutes');
+const mailRoutes = require('./routes/Email');
 
 
 const createAuthRouter  = require('./routes/authRoutes');
@@ -66,6 +67,8 @@ app.use('/api/favourites', favouriteRoutes);
 app.use('/api/rent', rentRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/filters', filterRoutes);
+app.use('/api/email', mailRoutes);
+
 
 
 // Use the upload route

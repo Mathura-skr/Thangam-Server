@@ -1,13 +1,21 @@
-const AddressModel = require('../models/Address');
+const AddressModel = require("../models/Address");
 
 class AddressController {
   // Create address (from request body, expects user_id in body)
   static async create(req, res) {
     try {
-      const { user_id, street, city, district, province, zip_code } = req.body;
+      const {
+        user_id,
+        street,
+        city,
+        district,
+        province,
+        zip_code,
+        address_type,
+      } = req.body;
 
       if (!user_id || !street || !city || !district || !province || !zip_code) {
-        return res.status(400).json({ message: 'All fields are required' });
+        return res.status(400).json({ message: "All fields are required" });
       }
 
       const newAddress = await AddressModel.create({
@@ -17,12 +25,13 @@ class AddressController {
         district,
         province,
         zip_code,
+        address_type: address_type || "delivery",
       });
 
       res.status(201).json(newAddress);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: "Server error" });
     }
   }
 
@@ -34,24 +43,20 @@ class AddressController {
       return res.status(200).json(addresses);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: "Server error" });
     }
   }
 
   // Create address for a user via URL param
   static async createForUser(req, res) {
     const { userId } = req.params;
-    const {
-      street,
-      city,
-      district,
-      province,
-      zip_code
-    } = req.body;
+    const { street, city, district, province, zip_code } = req.body;
 
     try {
       if (!street || !city || !district || !province || !zip_code) {
-        return res.status(400).json({ message: 'Missing required address fields' });
+        return res
+          .status(400)
+          .json({ message: "Missing required address fields" });
       }
 
       const newAddress = await AddressModel.create({
@@ -63,10 +68,14 @@ class AddressController {
         zip_code,
       });
 
-      res.status(201).json({ message: 'Address added successfully', address: newAddress });
+      res
+        .status(201)
+        .json({ message: "Address added successfully", address: newAddress });
     } catch (error) {
       console.error("Error creating address:", error);
-      res.status(500).json({ message: 'Failed to create address, please try again later' });
+      res
+        .status(500)
+        .json({ message: "Failed to create address, please try again later" });
     }
   }
 
@@ -79,13 +88,13 @@ class AddressController {
       const updatedAddress = await AddressModel.updateById(id, updatedFields);
 
       if (!updatedAddress) {
-        return res.status(404).json({ message: 'Address not found' });
+        return res.status(404).json({ message: "Address not found" });
       }
 
       res.status(200).json(updatedAddress);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: "Server error" });
     }
   }
 
@@ -96,23 +105,23 @@ class AddressController {
       const success = await AddressModel.deleteById(id);
 
       if (!success) {
-        return res.status(404).json({ message: 'Address not found' });
+        return res.status(404).json({ message: "Address not found" });
       }
 
-      res.status(200).json({ message: 'Address deleted successfully' });
+      res.status(200).json({ message: "Address deleted successfully" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: "Server error" });
     }
   }
 
-   static async updateForUser(req, res) {
+  static async updateForUser(req, res) {
     try {
       const { userId } = req.params;
       const { street, city, district, province, zip_code } = req.body;
 
       if (!street || !city || !district || !province || !zip_code) {
-        return res.status(400).json({ message: 'All fields are required' });
+        return res.status(400).json({ message: "All fields are required" });
       }
 
       // Get existing addresses
@@ -121,9 +130,15 @@ class AddressController {
       if (existing.length > 0) {
         // Update the first one (assuming one address per user)
         const updated = await AddressModel.updateById(existing[0].id, {
-          street, city, district, province, zip_code
+          street,
+          city,
+          district,
+          province,
+          zip_code,
         });
-        return res.status(200).json({ message: 'Address updated', address: updated });
+        return res
+          .status(200)
+          .json({ message: "Address updated", address: updated });
       } else {
         // Create a new one if none exists
         const created = await AddressModel.create({
@@ -132,18 +147,17 @@ class AddressController {
           city,
           district,
           province,
-          zip_code
+          zip_code,
         });
-        return res.status(201).json({ message: 'Address created', address: created });
+        return res
+          .status(201)
+          .json({ message: "Address created", address: created });
       }
     } catch (error) {
-      console.error('Update address failed:', error);
-      res.status(500).json({ message: 'Server error' });
+      console.error("Update address failed:", error);
+      res.status(500).json({ message: "Server error" });
     }
   }
-
-
-  
 }
 
 module.exports = AddressController;

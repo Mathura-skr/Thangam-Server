@@ -27,52 +27,99 @@ class OrderModel {
   }
 
   static async getAll(page = 1, limit = 10) {
-    const offset = (page - 1) * limit;
+  const offset = (page - 1) * limit;
 
-    const [orders] = await pool.query(
-      `
-            SELECT o.*, 
-                CONCAT(
-                    IFNULL(a.street, ''), ', ', 
-                    IFNULL(a.city, ''), ', ', 
-                    IFNULL(a.district, ''), ', ', 
-                    IFNULL(a.province, ''), ', ', 
-                    IFNULL(a.zip_code, '')
-                ) AS full_address
-            FROM orders o
-            LEFT JOIN addresses a ON o.address_id = a.id
-            ORDER BY o.id DESC
-            LIMIT ? OFFSET ?
-        `,
-      [limit, offset]
-    );
+  const [orders] = await pool.query(`
+    SELECT o.*, 
+      CONCAT(
+        IFNULL(a.street, ''), ', ', 
+        IFNULL(a.city, ''), ', ', 
+        IFNULL(a.district, ''), ', ', 
+        IFNULL(a.province, ''), ', ', 
+        IFNULL(a.zip_code, '')
+      ) AS full_address
+    FROM orders o
+    LEFT JOIN addresses a 
+      ON o.address_id = a.id 
+      AND a.address_type = 'delivery'  
+    ORDER BY o.id DESC
+    LIMIT ? OFFSET ?
+  `, [limit, offset]);
 
-    const [total] = await pool.query("SELECT COUNT(*) AS total FROM orders");
+  const [total] = await pool.query("SELECT COUNT(*) AS total FROM orders");
 
-    return {
-      total: total[0].total,
-      orders,
-    };
+  return {
+    total: total[0].total,
+    orders: orders.map(order => ({
+      ...order,
+      full_address: order.full_address || "No delivery address"
+    })),
+  };
+}
+
+ static async updateById(id, updatedFields) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Get current order state
+      const [currentOrder] = await connection.query(
+        "SELECT status, product_id, unit FROM orders WHERE id = ?",
+        [id]
+      );
+      
+      if (currentOrder.length === 0) {
+        throw new Error("Order not found");
+      }
+
+      const { status: oldStatus, product_id, unit } = currentOrder[0];
+
+      // Update order
+      const fields = Object.keys(updatedFields);
+      const values = Object.values(updatedFields);
+      const setClause = fields.map((field) => `\`${field}\` = ?`).join(", ");
+      
+      await connection.query(
+        `UPDATE orders SET ${setClause} WHERE id = ?`,
+        [...values, id]
+      );
+
+      // Handle inventory for completed orders
+      if (updatedFields.status === "completed" && oldStatus !== "completed") {
+        const [product] = await connection.query(
+          "SELECT stock FROM products WHERE id = ?",
+          [product_id]
+        );
+
+        if (product.length === 0) throw new Error("Product not found");
+        
+        const newStock = product[0].stock - unit;
+        if (newStock < 0) throw new Error("Insufficient stock");
+
+        await connection.query(
+          "UPDATE products SET stock = ? WHERE id = ?",
+          [newStock, product_id]
+        );
+      }
+
+      // Get updated order
+      const [updatedOrder] = await connection.query(
+        "SELECT * FROM orders WHERE id = ?",
+        [id]
+      );
+
+      await connection.commit();
+      return updatedOrder[0] || null;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   }
 
-  static async updateById(id, updatedFields) {
-    const fields = Object.keys(updatedFields);
-    const values = Object.values(updatedFields);
-    const setClause = fields.map((field) => `\`${field}\` = ?`).join(", ");
 
-    await pool.query(`UPDATE orders SET ${setClause} WHERE id = ?`, [
-      ...values,
-      id,
-    ]);
-
-    const [updatedOrder] = await pool.query(
-      "SELECT * FROM orders WHERE id = ?",
-      [id]
-    );
-    return updatedOrder[0] || null;
-  }
-
-  static async getSalesSummary() {
+ static async getSalesSummary() {
   const [rows] = await pool.query(`
     SELECT 
       o.product_id,
@@ -85,11 +132,59 @@ class OrderModel {
     JOIN products p ON o.product_id = p.id
     JOIN categories c ON p.category_id = c.id
     JOIN subcategories sc ON p.subcategory_id = sc.id
+    WHERE o.status = 'completed'
     GROUP BY o.product_id
     ORDER BY total_units DESC
   `);
   return rows;
 }
+
+static async getMonthlySalesSummary() {
+  const [rows] = await pool.query(`
+    SELECT 
+      DATE_FORMAT(created_at, '%Y-%m') AS month,
+      SUM(unit) AS total_units,
+      SUM(total_price) AS total_sales
+    FROM orders
+    WHERE status = 'completed'
+    GROUP BY month
+    ORDER BY month DESC
+    LIMIT 12
+  `);
+  return rows;
+}
+
+static async getQuarterlySalesSummary() {
+  const [rows] = await pool.query(`
+    SELECT 
+      CONCAT(YEAR(created_at), '-Q', QUARTER(created_at)) AS quarter,
+      SUM(unit) AS total_units,
+      SUM(total_price) AS total_sales
+    FROM orders
+    WHERE status = 'completed'
+    GROUP BY quarter
+    ORDER BY quarter DESC
+    LIMIT 8
+  `);
+  return rows;
+}
+
+static async getAnnualSalesSummary() {
+  const [rows] = await pool.query(`
+    SELECT 
+      YEAR(created_at) AS year,
+      SUM(unit) AS total_units,
+      SUM(total_price) AS total_sales
+    FROM orders
+    WHERE status = 'completed'
+    GROUP BY year
+    ORDER BY year DESC
+    LIMIT 5
+  `);
+  return rows;
+}
+
+
 
 }
 
