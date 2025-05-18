@@ -23,6 +23,7 @@ const rentRoutes = require('./routes/rentalRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const filterRoutes = require('./routes/filterRoutes');
 const mailRoutes = require('./routes/Email');
+const contactRoutes = require('./routes/contactRoutes');
 
 
 const createAuthRouter  = require('./routes/authRoutes');
@@ -68,6 +69,7 @@ app.use('/api/rent', rentRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/filters', filterRoutes);
 app.use('/api/email', mailRoutes);
+app.use('/api/contact', contactRoutes);
 
 
 
