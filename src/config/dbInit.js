@@ -1,7 +1,7 @@
 const { pool } = require("./database");
 
 const createTables = async () => {
-const userTable = `
+  const userTable = `
   CREATE TABLE IF NOT EXISTS users (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL,
@@ -16,7 +16,7 @@ const userTable = `
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`;
 
-const addressTable = `
+  const addressTable = `
   CREATE TABLE IF NOT EXISTS addresses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -82,6 +82,8 @@ const addressTable = `
         brand_id INT NOT NULL,
         quantity INT DEFAULT NULL,
         price DECIMAL(10, 2) NOT NULL,
+        discount DECIMAL(5, 2) DEFAULT NULL,
+        discount_price DECIMAL(10, 2) DEFAULT NULL,
         stock INT NOT NULL,
         image_url TEXT,
         manufactured_date DATE DEFAULT NULL,
@@ -142,7 +144,7 @@ const addressTable = `
         FOREIGN KEY (product_id) REFERENCES products(id)
     );`;
 
- const rentalProductTable = `
+  const rentalProductTable = `
   CREATE TABLE IF NOT EXISTS rental_products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -159,7 +161,7 @@ const addressTable = `
 
 
 
-  
+
 
   try {
     const connection = await pool.getConnection();

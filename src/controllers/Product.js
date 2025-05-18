@@ -2,7 +2,6 @@ const Product = require('../models/Product');
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
 
-// Function to convert a date string to ISO format (if not already)
 const toISOFormat = (date) => {
   const parsedDate = new Date(date);
   return parsedDate.toISOString();
@@ -24,7 +23,9 @@ exports.create = async (req, res) => {
       stock,
       image_url,
       manufactured_date,
-      expiry_date
+      expiry_date,
+      discount,
+      discount_price
     } = req.body;
 
     if (
@@ -50,11 +51,10 @@ exports.create = async (req, res) => {
       if (!manufactured_date || !expiry_date) {
         return res.status(400).json({ message: "Manufactured and expiry dates are required for fertilizers" });
       }
-      // Normalize dates
+
       const isoManufacturedDate = toISOFormat(manufactured_date);
       const isoExpiryDate = toISOFormat(expiry_date);
 
-      // Validate the dates
       if (new Date(isoExpiryDate) <= new Date(isoManufacturedDate)) {
         return res.status(400).json({ message: "Expiry date must be after manufactured date" });
       }
@@ -80,22 +80,21 @@ exports.create = async (req, res) => {
       stock,
       image_url: image_url || null,
       manufactured_date: manufactured_date ? toISOFormat(manufactured_date) : null,
-      expiry_date: expiry_date ? toISOFormat(expiry_date) : null
+      expiry_date: expiry_date ? toISOFormat(expiry_date) : null,
+      discount: discount || 0,
+      discount_price: discount_price || 0
     });
 
     res.status(201).json(newProduct);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating product, please try again later" });
   }
 };
 
-
 exports.updateById = async (req, res) => {
   try {
-
-    
-
     const { id } = req.params;
     const updatedFields = req.body;
 
@@ -110,7 +109,9 @@ exports.updateById = async (req, res) => {
       price,
       stock,
       manufactured_date,
-      expiry_date
+      expiry_date,
+      discount,
+      discount_price
     } = updatedFields;
 
     if (
@@ -134,20 +135,25 @@ exports.updateById = async (req, res) => {
     updatedFields.image_url = updatedFields.image_url || null;
     updatedFields.manufactured_date = manufactured_date || null;
     updatedFields.expiry_date = expiry_date || null;
+    updatedFields.discount = discount || 0;
+    updatedFields.discount_price = discount_price || 0;
 
     const updatedProduct = await Product.updateById(id, updatedFields);
-  
+
     if (updatedProduct) {
       res.status(200).json(updatedProduct);
     } else {
       res.status(404).json({ message: "Product not found" });
     }
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error updating product, please try again later" });
   }
-
 };
+
+// other methods (getAll, getById, deleteById, getFilterOptions, getRelated, search) remain unchanged
+
 
 exports.getAll = async (req, res) => {
   try {
