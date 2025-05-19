@@ -97,6 +97,9 @@ exports.sendInvoiceEmail = async (req, res) => {
         <p style="margin-top: 40px; font-size: 0.95em; color: #555;">
           Thank you for shopping with <strong>Thangam</strong>! If you have any questions, feel free to reply to this email.
         </p>
+         <p style="font-size: 0.9em; color: #555; margin-top: 10px;">
+  <strong>Address:</strong> No:23, Dockyard Road, Trincomalee
+</p>
       </div>
     `;
 
