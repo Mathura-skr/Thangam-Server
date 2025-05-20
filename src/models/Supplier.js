@@ -22,12 +22,18 @@ class Supplier {
 
     // Get all suppliers
     static async getAll() {
-        const [suppliers] = await pool.query(`
-            SELECT * FROM suppliers
-            ORDER BY created_at DESC
-        `);
-        return suppliers;
-    }
+  const [suppliers] = await pool.query(`
+    SELECT 
+      s.*, 
+      GROUP_CONCAT(p.id) AS product_ids
+    FROM suppliers s
+    LEFT JOIN products p ON p.supplier_id = s.id
+    GROUP BY s.id
+    ORDER BY s.created_at DESC
+  `);
+  return suppliers;
+}
+
 
     // Get supplier by ID
     static async getById(id) {

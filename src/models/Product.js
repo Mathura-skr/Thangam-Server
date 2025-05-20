@@ -206,6 +206,8 @@ class Product {
         sc.name AS subcategory_name,
         s.name AS supplier_name,
         b.name AS brand_name,
+        p.discount,
+        p.discount_price,
         ROUND(AVG(r.rating), 1) AS average_rating,
         COUNT(r.id) AS review_count
       FROM products p
@@ -230,6 +232,8 @@ class Product {
         sc.name AS subCategory, 
         b.name AS brand,
         sp.name AS supplier,
+        p.discount,
+        p.discount_price,
         ROUND(AVG(r.rating), 1) AS average_rating,
         COUNT(r.id) AS review_count
       FROM products p
