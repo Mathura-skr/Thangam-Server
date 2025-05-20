@@ -234,6 +234,8 @@ class Product {
         sp.name AS supplier,
         p.discount,
         p.discount_price,
+        p.manufactured_date,
+        p.expiry_date,
         ROUND(AVG(r.rating), 1) AS average_rating,
         COUNT(r.id) AS review_count
       FROM products p

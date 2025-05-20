@@ -152,7 +152,6 @@ exports.updateById = async (req, res) => {
   }
 };
 
-// other methods (getAll, getById, deleteById, getFilterOptions, getRelated, search) remain unchanged
 
 
 exports.getAll = async (req, res) => {

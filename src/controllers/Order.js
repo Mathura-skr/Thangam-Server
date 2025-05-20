@@ -143,3 +143,18 @@ exports.getAnnualSalesSummary = async (req, res) => {
   }
 };
 
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Optionally, you can check if the order is already completed/cancelled and prevent cancellation
+    const cancelledOrder = await OrderModel.cancelOrderById(id);
+    if (!cancelledOrder) {
+      return res.status(404).json({ message: 'Order not found or cannot be cancelled' });
+    }
+    res.status(200).json({ message: 'Order cancelled successfully', order: cancelledOrder });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error cancelling order, please try again later' });
+  }
+};
+

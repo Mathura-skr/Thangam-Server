@@ -184,6 +184,51 @@ static async getAnnualSalesSummary() {
   return rows;
 }
 
+static async cancelOrderById(id) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      // Get current order state
+      const [orderRows] = await connection.query(
+        'SELECT status, product_id, unit FROM orders WHERE id = ?',
+        [id]
+      );
+      if (orderRows.length === 0) {
+        throw new Error('Order not found');
+      }
+      const { status, product_id, unit } = orderRows[0];
+      if (status === 'completed' || status === 'cancelled') {
+        // Cannot cancel completed or already cancelled orders
+        await connection.rollback();
+        return null;
+      }
+      // Update order status to cancelled
+      await connection.query(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        ['cancelled', id]
+      );
+      // Optionally, restock inventory if needed (if order was paid)
+      // (Uncomment if you want to restock)
+      await connection.query(
+        'UPDATE products SET stock = stock + ? WHERE id = ?',
+        [unit, product_id]
+      );
+      
+      // Get updated order
+      const [updatedOrder] = await connection.query(
+        'SELECT * FROM orders WHERE id = ?',
+        [id]
+      );
+      await connection.commit();
+      return updatedOrder[0] || null;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
 
 
 }
