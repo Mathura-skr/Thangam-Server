@@ -192,6 +192,15 @@ class Product {
   }
 
   static async deleteById(id) {
+    // Check if product has any orders
+    const [orders] = await pool.execute("SELECT COUNT(*) as count FROM orders WHERE product_id = ?", [id]);
+    if (orders[0].count > 0) {
+      // Product has been ordered, do not allow deletion
+      const error = new Error("This product cannot be deleted because it has already been ordered by a customer.");
+      error.status = 400;
+      error.code = "PRODUCT_ORDERED_CANNOT_DELETE";
+      throw error;
+    }
     await pool.execute("DELETE FROM products WHERE id = ?", [id]);
     return { message: "Product deleted successfully" };
   }
@@ -306,6 +315,13 @@ class Product {
   return rows;
 }
 
+  static async decreaseStock(productId, quantity) {
+    // Decrease stock for a product by quantity
+    await pool.execute(
+      'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?',
+      [quantity, productId, quantity]
+    );
+  }
   
 }
 

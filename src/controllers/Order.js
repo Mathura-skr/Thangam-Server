@@ -1,4 +1,5 @@
 const OrderModel = require('../models/Order');
+const Product = require('../models/Product'); // Add this line
 
 const mockPayment = async ({ user_id, total_price, paymentMode }) => {
   await new Promise(resolve => setTimeout(resolve, 500)); // Simulated delay
@@ -39,6 +40,8 @@ exports.create = async (req, res) => {
         status,
         paymentMode
       });
+      // Decrease product stock after order
+      await Product.decreaseStock(item.product_id, item.unit);
       createdOrders.push(newOrder);
     }
 

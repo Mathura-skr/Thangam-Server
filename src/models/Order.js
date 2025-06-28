@@ -74,6 +74,18 @@ class OrderModel {
 
       const { status: oldStatus, product_id, unit } = currentOrder[0];
 
+      // Prevent cancellation if order is shipped
+      if (
+        updatedFields.status &&
+        updatedFields.status.toLowerCase() === "cancelled" &&
+        oldStatus && oldStatus.toLowerCase() === "shipped"
+      ) {
+        const error = new Error("Shipped orders cannot be cancelled.");
+        error.status = 400;
+        error.code = "ORDER_SHIPPED_CANNOT_CANCEL";
+        throw error;
+      }
+
       // Update order
       const fields = Object.keys(updatedFields);
       const values = Object.values(updatedFields);
