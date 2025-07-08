@@ -27,41 +27,83 @@ graph TD
   Staff((Staff))
   Admin((Admin))
 
-  User -- Register/Login --> A[Authenticate]
-  User -- View Products --> B[View Catalog]
-  User -- Place Order --> C[Order Product]
-  User -- Rent Tool --> D[Rent Product]
-  User -- Write Review --> E[Submit Review]
+  %% User Actions
+  User -- Browse Products --> BP[Browse Products]
+  User -- Search Products --> SP[Search Products]
+  User -- Place Order --> PO[Place Order]
+  User -- View Rent Product --> RP[View Rent Product]
+  User -- Write Review --> WR[Write Review]
+  User -- View Profile --> VP[View Profile]
 
-  Staff -- Manage Products --> F[CRUD Products]
-  Staff -- Manage Rentals --> G[CRUD Rentals]
-  Staff -- Manage Orders --> H[Process Orders]
-  Staff -- Manage Suppliers --> I[CRUD Suppliers]
-  Staff -- View Reports --> J[View Dashboard]
+  %% Staff Actions
+  Staff -- Add/Update Products --> AUP[Add/Update Products]
+  Staff -- Add/Update Rentals --> AUR[Add/Update Rentals]
+  Staff -- Manage Orders --> MO[Manage Orders]
+  Staff -- Manage Suppliers --> MS[Manage Suppliers]
+  Staff -- View Dashboard --> VD[View Dashboard]
+  Staff -- Generate Reports --> GR[Generate Reports]
 
-  Admin -- All Staff Actions --> Staff
-  Admin -- Manage Users --> K[User Management]
-  Admin -- Moderate Reviews --> L[Moderate Reviews]
-  Admin -- View Reports --> J
+  %% Admin Actions
+  Admin -- All Staff Use Cases --> Staff
+  Admin -- Manage Users --> MU[Manage Users]
+  Admin -- Moderate Reviews --> MR[Moderate Reviews]
+  Admin -- View Sales/Rental Reports --> SRR[View Sales/Rental Reports]
 ```
 
 ---
 
-## Sequence Diagram: Placing a Rental Order
-
+## Sequence Diagram: For overall
 ```mermaid
 sequenceDiagram
     participant User
     participant Frontend
-    participant Backend
-    participant DB
+    participant Backend API
+    participant Staff
+    participant Admin
 
-    User->>Frontend: Selects rental product, fills form
-    Frontend->>Backend: POST /api/rentals (order data)
-    Backend->>DB: Validate & save rental order
-    DB-->>Backend: Confirmation
-    Backend-->>Frontend: Order confirmation response
-    Frontend-->>User: Show success message
+    %% Registration & Login
+    User->>Frontend: Register/Login
+    Frontend->>Backend API: Submit credentials
+    Backend API-->>Frontend: Auth success/failure
+    Frontend-->>User: Show login status
+
+    %% Product Browsing & Search
+    User->>Frontend: Browse/Search Products
+    Frontend->>Backend API: Request product list
+    Backend API-->>Frontend: Return product list
+    Frontend-->>User: Display products
+
+    %% View Rental Tools & Check Availability
+    User->>Frontend: View Rental Tools
+    Frontend->>Backend API: Request rental tools
+    Backend API-->>Frontend: Return rental tools
+    User->>Frontend: Check Tool Availability
+    Frontend->>Backend API: Query availability
+    Backend API-->>Frontend: Return availability info
+    Frontend-->>User: Display availability
+
+    Note over User, Staff: If available, user contacts staff via call/message to rent
+
+    %% Cart Management & Order
+    User->>Frontend: Add to Cart
+    Frontend->>Backend API: Update cart
+    User->>Frontend: Checkout
+    Frontend->>Backend API: Submit order
+    Backend API-->>Frontend: Return order confirmation
+    Backend API->>Staff: Notify new order
+
+    %% Review & Profile
+    User->>Frontend: Submit Review / View Profile
+    Frontend->>Backend API: Post review / Fetch profile
+    Backend API-->>Frontend: Success/Fail
+    Frontend-->>User: Display status
+
+    %% Staff & Admin Actions
+    Staff->>Backend API: Manage Products/Rentals
+    Staff->>Backend API: Update Inventory/Orders
+    Admin->>Backend API: Manage Users
+    Admin->>Backend API: Moderate Reviews
+    Admin->>Backend API: View Sales/Rental Reports
 ```
 
 ---
@@ -70,54 +112,94 @@ sequenceDiagram
 
 ```mermaid
 erDiagram
-    USER {
+    USERS {
       int id PK
       string name
       string email
       string password
-      string role
       string phone
+      string role
+      datetime created_at
     }
-    PRODUCT {
-      int id PK
-      string name
-      string category
-      string description
-      float price
-      int supplier_id FK
-      bool is_rental
-      int stock
-    }
-    SUPPLIER {
-      int id PK
-      string name
-      string brand
-      string contact
-    }
-    ORDER {
+
+    ADDRESSES {
       int id PK
       int user_id FK
+      string street
+      string city
+      string district
+      string province
+      string zip_code
+      string address_type
+    }
+
+    SUPPLIERS {
+      int id PK
+      string name
+      string contact_info
+      string address
+    }
+
+    PRODUCTS {
+      int id PK
+      string name
+      string description
+      float price
+      int stock
+      int supplier_id FK
+      datetime created_at
+    }
+
+    ORDERS {
+      int id PK
+      int user_id FK
+      int address_id FK
+      float total
+      string status
+      datetime created_at
+    }
+
+    ORDER_ITEMS {
+      int id PK
+      int order_id FK
       int product_id FK
       int quantity
-      float total
-      string type
-      date order_date
-      string status
+      float price
     }
-    REVIEW {
+
+    CARTS {
+      int id PK
+      int user_id FK
+      datetime created_at
+    }
+
+    CART_ITEMS {
+      int id PK
+      int cart_id FK
+      int product_id FK
+      int quantity
+    }
+
+    REVIEWS {
       int id PK
       int user_id FK
       int product_id FK
       int rating
       string comment
-      date date
+      datetime created_at
     }
 
-    USER ||--o{ ORDER : places
-    USER ||--o{ REVIEW : writes
-    PRODUCT ||--o{ ORDER : included_in
-    PRODUCT ||--o{ REVIEW : reviewed
-    SUPPLIER ||--o{ PRODUCT : supplies
+    USERS ||--o{ ADDRESSES : has
+    USERS ||--o{ ORDERS : places
+    USERS ||--o{ CARTS : owns
+    USERS ||--o{ REVIEWS : writes
+    ORDERS ||--o{ ORDER_ITEMS : contains
+    PRODUCTS ||--o{ ORDER_ITEMS : part_of
+    CARTS ||--o{ CART_ITEMS : contains
+    PRODUCTS ||--o{ CART_ITEMS : added
+    PRODUCTS ||--o{ REVIEWS : reviewed
+    SUPPLIERS ||--o{ PRODUCTS : supplies
+    ORDERS ||--|| ADDRESSES : delivers_to
 ```
 
 ---
